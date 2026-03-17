@@ -108,29 +108,13 @@ Flags:
 
 `--inspect` implies `--dry-run`. In JSON mode, both include file contents. JSON output also implies non-interactive mode.
 
-## `integrate`
-
-```bash
-magicpath-ai integrate <generatedName> --target <file> --no-review -o json
-magicpath-ai integrate <generatedName> --target <file> --dry-run -o json
-```
-
-Returns modified file contents but does not write them. The agent must write each `modifiedFiles[].content` to its `path`.
-
-Flags:
-
-- `--target <file>`, `-t`: target file, required in JSON mode
-- `--no-review`: apply without interactive review
-- `--dry-run`: preview without writing
-- `--debug`, `-d`: enable debug logging
-
 ## `setup-skills`
 
 ```bash
 magicpath-ai setup-skills
 ```
 
-Writes local editor rules for Claude Code, Cursor, and GitHub Copilot.
+Installs MagicPath skills for supported AI agents via `npx skills add`.
 
 ## `schema`
 

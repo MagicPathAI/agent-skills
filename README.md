@@ -18,8 +18,8 @@ npx skills add https://github.com/MagicPathAI/agent-skills --list
 
 ### `magicpath`
 
-Search, preview, inspect, install, and integrate MagicPath UI components with the `magicpath-ai` CLI.
+Search, preview, inspect, and install MagicPath UI components with the `magicpath-ai` CLI.
 
 Use this when the user mentions MagicPath, wants to find a MagicPath component, preview one, add one to their project, or wire a MagicPath component into existing code.
 
-This skill mirrors the guidance currently emitted by `magicpath-ai setup-skills`, but in the standard Agent Skills repository layout so `npx skills add` can install it for supported agents.
+This skill is the canonical source of truth — both `npx skills add` and `magicpath-ai setup-skills` install from this repo.
