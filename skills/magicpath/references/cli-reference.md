@@ -91,14 +91,28 @@ magicpath-ai view-component <generatedName>    # alias
 
 Opens the component preview URL in the default browser. In JSON mode, returns the URL without opening.
 
+### `inspect` — View component source code
+
+```bash
+magicpath-ai inspect <generatedName>              # human-readable with file contents
+magicpath-ai inspect <generatedName> -o json      # structured JSON with source code
+```
+
+Shows the component's source code, dependencies, and import info without installing anything. This is read-only — no files are written, no package.json is required.
+
+| Flag | Short | Description | Default |
+|------|-------|-------------|---------|
+| `--debug` | `-d` | Enable debug logging | false |
+
+**JSON output** includes `{ component, generatedName, files: [{ path, name, content }], dependencies, importStatement?, usage? }`.
+
 ### `add` — Add a component to your project
 
-> **IMPORTANT:** Only use `add` when you intend to import the component afterward. To inspect source code without installing, use `add --inspect`. After adding, always import and use the component — never add and then manually replicate its styles.
+> **IMPORTANT:** Only use `add` when you intend to import the component afterward. To inspect source code without installing, use `magicpath-ai inspect`. After adding, always import and use the component — never add and then manually replicate its styles.
 
 ```bash
 magicpath-ai add <generatedName>
 magicpath-ai add <generatedName> -y              # skip prompts
-magicpath-ai add <generatedName> --inspect       # show source code (no install)
 magicpath-ai add <generatedName> --dry-run       # preview file list only
 magicpath-ai add <generatedName> -y --overwrite  # replace existing
 ```
@@ -109,10 +123,7 @@ magicpath-ai add <generatedName> -y --overwrite  # replace existing
 | `--overwrite` | | Overwrite existing files | false |
 | `--path <path>` | `-p` | Custom component path | src/components/magicpath |
 | `--dry-run` | | Preview file list without writing | false |
-| `--inspect` | | Show full source code without installing (implies --dry-run) | false |
 | `--debug` | `-d` | Enable debug logging | false |
-
-**`--inspect` vs `--dry-run`:** `--dry-run` shows file paths and dependencies. `--inspect` also shows the full source code of each file. Use `--inspect` when deciding whether a component fits your needs. In JSON mode, both include file contents.
 
 **JSON output** (`-o json`) automatically implies `-y` (no prompts).
 
@@ -127,4 +138,5 @@ magicpath-ai setup-skills     # installs MagicPath skills for supported AI agent
 ```bash
 magicpath-ai schema            # list available schemas
 magicpath-ai schema add        # schema for add command
+magicpath-ai schema inspect    # schema for inspect command
 ```
