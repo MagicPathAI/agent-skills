@@ -6,6 +6,7 @@ metadata:
   author: MagicPathAI
   source: https://github.com/MagicPathAI/agent-skills
 allowed-tools: Bash(magicpath-ai *)
+user-invocable: true
 ---
 
 # MagicPath
@@ -69,6 +70,14 @@ magicpath-ai add <generatedName> -y         # add to project (no prompts)
 - Components are added as source code to `src/components/magicpath/<name>/`
 - The `add` command returns `importStatement` and `usage` — use these in code
 - Use `add --inspect` to inspect source code without installing — don't use `add` just to read code
+
+## Current Project Context
+
+```json
+!`magicpath-ai info --json 2>/dev/null || echo '{"error": "magicpath-ai not found. Install with: npm install -g magicpath-ai"}'`
+```
+
+The JSON above contains auth status, projects, and CLI version. If auth.authenticated is false, the user needs to log in before any other operations.
 
 ## References
 
