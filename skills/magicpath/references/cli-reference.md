@@ -100,6 +100,8 @@ magicpath-ai inspect <generatedName> -o json      # structured JSON with source 
 
 Shows the component's source code, dependencies, and import info without installing anything. This is read-only — no files are written, no package.json is required.
 
+`inspect` works in any project type. For non-React projects (Swift, Python, etc.), use `inspect` to read MagicPath component source code as a reference for recreating the component in your target language.
+
 | Flag | Short | Description | Default |
 |------|-------|-------------|---------|
 | `--debug` | `-d` | Enable debug logging | false |
@@ -108,7 +110,7 @@ Shows the component's source code, dependencies, and import info without install
 
 ### `add` — Add a component to your project
 
-> **IMPORTANT:** Only use `add` when you intend to import the component afterward. To inspect source code without installing, use `magicpath-ai inspect`. After adding, always import and use the component — never add and then manually replicate its styles.
+> **IMPORTANT:** Only use `add` in React/TypeScript projects where you intend to import the component afterward. For non-JS projects, use `magicpath-ai inspect` to read source code and translate it. After adding, always import and use the component — never add and then manually replicate its styles.
 
 ```bash
 magicpath-ai add <generatedName>

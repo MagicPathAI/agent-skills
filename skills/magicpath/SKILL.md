@@ -28,7 +28,7 @@ Run `magicpath-ai info -o json` to check auth status, project context, and CLI a
 2. **Find components** — use `magicpath-ai search <query> -o json` to search across all projects, or `list-projects -o json` then `list-components <projectId> -o json` to browse.
 3. **Understand components visually** — `search` and `list-components` results include a `previewImageUrl` field. Download and analyze these images to understand what each component looks like before recommending it. Preview images are for your own understanding — use the `view` command when the user needs to see a component.
 4. **Confirm with the user (STOP and wait)** — unless the user specified an exact generatedName, tell the user what you found (name, generatedName, project), open a browser preview with `magicpath-ai view <generatedName>`, and ask if it's the right component. If multiple matches, list them all and ask which one. **This is a STOP point — end your response here and wait for the user to reply. Do NOT proceed to steps 5-7 until the user explicitly confirms.** Do not run `add` or `inspect` yet.
-5. **Inspect source** — only after the user confirms in step 4, use `magicpath-ai inspect <generatedName> -o json` to see the component's source code without installing. Decide how it needs to be adapted (props to add, behavior to wire up).
+5. **Inspect source** — only after the user confirms in step 4, use `magicpath-ai inspect <generatedName> -o json` to see the component's source code. If this is a **React/TypeScript project**, decide how it needs to be adapted, then proceed to step 6. If this is a **non-React project** (Swift, Python, etc.), **do not run `add`** — use the inspected source as a reference to recreate the component in the target language and framework.
 6. **Add to project** — use `magicpath-ai add <generatedName> -y` to install component files. Always pass `-y` in non-interactive contexts.
 7. **Use the component** — after adding, import the component from `@/components/magicpath/<name>/` using the `importStatement` from the add output. Edit the component file to add props as needed, then render it from the parent.
 
@@ -39,6 +39,7 @@ Run `magicpath-ai info -o json` to check auth status, project context, and CLI a
 - **MagicPath components are source code you own.** After `add`, the component files live in your project at `src/components/magicpath/<name>/`. You can and should edit them directly to add props, change behavior, adjust styles, or integrate with your app's state.
 - **When a component needs integration:** (1) `add` the component, (2) edit the component file to accept the props you need (e.g., `onSubmit`, `placeholder`, `className`), (3) import it from the parent and pass those props. Do NOT copy the component's JSX/styles into the parent file.
 - **`inspect` is read-only.** Shows full source code without writing any files. Use this when deciding whether a component fits your needs before committing to install.
+- **`add` is for React/TypeScript projects only.** The `add` command writes `.tsx` files to `src/components/magicpath/` and installs npm dependencies. Only use `add` in JavaScript/TypeScript projects. For non-JS projects (Swift, Python, etc.), use `inspect` to read the component source, then translate the design and behavior into the project's language and framework.
 - **Never run `view` commands in parallel.** The `view` command opens a browser window for the user. Only open one preview at a time.
 
 ## Quick Reference
@@ -69,6 +70,7 @@ magicpath-ai add <generatedName> -y         # add to project (no prompts)
 - Components are added as source code to `src/components/magicpath/<name>/`
 - The `add` command returns `importStatement` and `usage` — use these in code
 - Use `inspect` to inspect source code without installing — don't use `add` just to read code
+- MagicPath components are React/TypeScript source code — use `add` in JS/TS projects, use `inspect` + translate for other languages
 
 ## Current Project Context
 
