@@ -1,6 +1,6 @@
 ---
 name: magicpath
-description: Search, preview, inspect, and install MagicPath UI components with the magicpath-ai CLI. Use when the user mentions MagicPath, wants to browse or search MagicPath components, preview one, or add one to their project. Also use when the user refers to "designs" — in MagicPath, designs are created and stored as components.
+description: Search, preview, inspect, and install MagicPath UI components with the magicpath-ai CLI. Use when the user mentions MagicPath, wants to browse or search MagicPath components, preview one, or add one to their project. Also use when the user refers to "designs" — in MagicPath, designs are created and stored as components. Also use when the user mentions themes or theming — MagicPath themes (design systems) contain CSS variables, fonts, and styling instructions.
 compatibility: Requires the magicpath-ai CLI on PATH, network access to MagicPath, and browser access for login or preview flows.
 metadata:
   author: MagicPathAI
@@ -14,6 +14,8 @@ user-invocable: true
 A platform for building, sharing, and installing UI components via AI. Components are added as source code to the user's project via the `magicpath-ai` CLI.
 
 > **Terminology:** Users often refer to MagicPath components as "designs" — the two terms are interchangeable. When a user says "design," "my designs," or "that design," treat it as meaning a MagicPath component. Search, inspect, and install accordingly.
+>
+> Users also refer to MagicPath design systems as "themes." When a user says "theme," "my themes," or "use the X theme," they mean a MagicPath design system — a set of CSS variables, fonts, and styling instructions. Use `list-themes` and `get-theme` to work with them.
 
 ## First Step
 
@@ -24,7 +26,7 @@ Run `magicpath-ai info -o json` to check auth status, project context, and CLI a
 
 ## Workflow
 
-> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `info`, `add`, `inspect`). This gives you structured output to work with instead of human-readable tables.
+> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-themes`, `get-theme`, `info`, `add`, `inspect`). This gives you structured output to work with instead of human-readable tables.
 
 ### Phase 1: Discover
 
@@ -43,6 +45,17 @@ Run `magicpath-ai info -o json` to check auth status, project context, and CLI a
    - **Layout context**: What is the parent layout? Is it a flex/grid container? What are the responsive breakpoints? How does spacing work? A component that looks perfect in isolation can break a layout if its sizing assumptions don't match.
    - **Data flow**: What props, context, or state does the surrounding code provide? What does it expect back (callbacks, form data, events)?
    - **Design system**: What styling patterns does the project use (Tailwind, CSS modules, theme tokens)? The MagicPath component's styles need to harmonize, not clash.
+
+### Applying a Theme (if applicable)
+
+If the user has a theme they want applied, or references a brand/design system by name:
+
+1. **List available themes** — run `magicpath-ai list-themes -o json` to see all themes.
+2. **Get the theme definition** — run `magicpath-ai get-theme <id-or-name> -o json` to fetch the full definition.
+3. **Read the `prompt` field** — if present, this contains natural-language styling instructions from the designer (e.g., "use rounded corners, prefer shadows over borders, use the brand blue for CTAs"). Follow these instructions when adapting components.
+4. **Apply CSS variables** — the theme's `light` and `dark` objects map CSS variable names to values (e.g., `--background: #ffffff`, `--primary: #3b82f6`). When adapting MagicPath components, use these CSS variables instead of hardcoded colors: `bg-[var(--background)]`, `text-[var(--primary)]`, etc. Ensure the component respects `defaultTheme` (light or dark).
+5. **Handle fonts** — if the theme includes `fonts`, ensure the project loads these fonts (Google Fonts link or `@font-face` declarations for custom fonts) and that components reference them via the theme's font CSS variables (e.g., `font-family: var(--font-body)`).
+6. **Non-React/JS projects** — theme data is a reference, not a stylesheet. Translate CSS variables into the target platform's equivalent: SwiftUI `Color` assets, Android theme XML, Python template context, etc. The `prompt` field and color/font values express platform-agnostic design intent — map them to native patterns rather than using CSS directly.
 
 ### Phase 3: Install and Adapt
 
@@ -130,6 +143,10 @@ magicpath-ai add <generatedName> --dry-run     # show what would be installed
 
 # Install and use components
 magicpath-ai add <generatedName> -y         # add to project (no prompts)
+
+# Themes (design systems)
+magicpath-ai list-themes -o json               # list all themes
+magicpath-ai get-theme <id-or-name> -o json    # get theme CSS vars, fonts, prompt
 ```
 
 ## Key Concepts
@@ -139,6 +156,7 @@ magicpath-ai add <generatedName> -y         # add to project (no prompts)
 - The `add` command returns `importStatement` and `usage` — use these in code
 - Use `inspect` to inspect source code without installing — don't use `add` just to read code
 - MagicPath components are React/TypeScript source code — use `add` in JS/TS projects, use `inspect` + translate for other languages
+- **Themes** (design systems) contain CSS variables (`light`/`dark` maps), optional `fonts`, and an optional `prompt` with styling instructions for agents. "Theme" and "design system" are interchangeable. Use `list-themes` to browse, `get-theme` to fetch the full definition
 
 ## Current Project Context
 

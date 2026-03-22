@@ -82,6 +82,35 @@ Uses cursor-based pagination. To get the next page, pass `pagination.lastId` as 
 
 JSON output: `{ components, pagination: { limit, hasNext, lastId } }`. Each component includes `previewImageUrl` (string or null) — a screenshot of the component's latest revision.
 
+### `list-themes` — List all themes (design systems)
+
+```bash
+magicpath-ai list-themes
+magicpath-ai list-themes -o json
+```
+
+Lists all design systems (themes) accessible to the current user, including public themes.
+
+JSON output: `{ themes: [{ id, name, isPublic, createdAt, updatedAt }] }`
+
+### `get-theme` — Get a theme definition
+
+```bash
+magicpath-ai get-theme <themeId>
+magicpath-ai get-theme <themeId> -o json
+magicpath-ai get-theme "My Brand Theme" -o json    # lookup by name
+```
+
+Fetches the full theme definition including CSS variables, fonts, and styling prompt. Accepts a numeric ID or a theme name (case-insensitive match).
+
+JSON output: `{ id, name, theme: { light: { "--var": "value", ... }, dark: { ... } }, defaultTheme, prompt?, fonts?, version }`
+
+Key fields for agents:
+- `theme.light` / `theme.dark` — CSS variable maps to apply to components
+- `prompt` — Natural language styling instructions from the designer (e.g., "use rounded corners, prefer shadows over borders")
+- `fonts` — Font metadata with source (`google` or `custom`) and weight URLs
+- `defaultTheme` — Whether the theme defaults to `"light"` or `"dark"`
+
 ### `view` — Preview a component
 
 ```bash
