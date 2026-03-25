@@ -41,7 +41,7 @@ magicpath-ai search "button" -o json
 magicpath-ai search "card" --limit 5
 ```
 
-Fuzzy searches component names across all projects. Returns matches with project context. Each result includes `previewImageUrl` — use `list-components` or search results to get preview images when visual context is needed.
+Searches component names (case-insensitive substring match) across all projects. Returns matches with project context. Each result includes `previewImageUrl` — use `list-components` or search results to get preview images when visual context is needed.
 
 | Flag | Description | Default |
 |------|-------------|---------|
@@ -158,16 +158,18 @@ magicpath-ai add <generatedName> -y --overwrite  # replace existing
 
 **JSON output** (`-o json`) automatically implies `-y` (no prompts).
 
-### `setup-skills` — Set up for AI agents
+### `list-installed` — List installed MagicPath components
 
 ```bash
-magicpath-ai setup-skills     # installs MagicPath skills for supported AI agents via npx skills add
+magicpath-ai list-installed
+magicpath-ai list-installed -o json
+magicpath-ai list-installed --path src/components/custom
 ```
 
-### `schema` — Output JSON schemas
+Lists MagicPath components already installed in the current project by scanning the components directory. Useful for checking what's already been added before installing new components.
 
-```bash
-magicpath-ai schema            # list available schemas
-magicpath-ai schema add        # schema for add command
-magicpath-ai schema inspect    # schema for inspect command
-```
+| Flag | Short | Description | Default |
+|------|-------|-------------|---------|
+| `--path <path>` | `-p` | Custom components directory | src/components/magicpath |
+
+JSON output: `{ components: [{ name, folder, path, files, exportName, importStatement }], total, componentsPath }`
