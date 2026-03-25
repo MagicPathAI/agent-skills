@@ -21,7 +21,7 @@ A platform for building, sharing, and installing UI components via AI. Component
 
 Run `magicpath-ai info -o json` to check auth status, project context, and CLI availability.
 
-- If the CLI is missing, install it with `npm install -g magicpath-ai` or invoke it with `npx magicpath-ai@latest`.
+- If the CLI is missing, invoke it with `npx magicpath-ai`.
 - If `auth.authenticated` is false, run `magicpath-ai login`, wait for browser auth to finish, then verify with `magicpath-ai whoami -o json`.
 
 ## Workflow
