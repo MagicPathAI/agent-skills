@@ -1,6 +1,6 @@
 ---
 name: magicpath
-description: Search, preview, inspect, and install MagicPath UI components with the magicpath-ai CLI. Use when the user mentions MagicPath, wants to browse or search MagicPath components, preview one, or add one to their project. Also use when the user refers to "designs" — in MagicPath, designs are created and stored as components. Also use when the user mentions themes or theming — MagicPath themes (design systems) contain CSS variables, fonts, and styling instructions.
+description: Search, preview, inspect, and install MagicPath UI components with the magicpath-ai CLI. Use when the user mentions MagicPath, wants to browse or search MagicPath components, preview one, or add one to their project. Also use when the user refers to "designs" — in MagicPath, designs are created and stored as components. Also use when the user mentions themes or theming — MagicPath themes (design systems) contain CSS variables, fonts, and styling instructions. Also use when the user asks about MagicPath organizations, teams, members, or who worked on something — MagicPath supports organizations with shared projects, team members, and attribution tracking.
 compatibility: Requires the magicpath-ai CLI on PATH, network access to MagicPath, and browser access for login or preview flows.
 metadata:
   author: MagicPathAI
@@ -16,6 +16,8 @@ A platform for building, sharing, and installing UI components via AI. Component
 > **Terminology:** Users often refer to MagicPath components as "designs" — the two terms are interchangeable. When a user says "design," "my designs," or "that design," treat it as meaning a MagicPath component. Search, inspect, and install accordingly.
 >
 > Users also refer to MagicPath design systems as "themes." When a user says "theme," "my themes," or "use the X theme," they mean a MagicPath design system — a set of CSS variables, fonts, and styling instructions. Use `list-themes` and `get-theme` to work with them.
+>
+> Users may belong to **organizations** (also called "teams" or "workspaces"). When a user says "the team's designs," "our org's components," or mentions a team name like "Acme Inc," they mean the projects and components owned by that organization. Use `list-orgs`, `--org`, and `--personal` flags to navigate between personal and organization workspaces.
 
 ## First Step
 
@@ -24,9 +26,54 @@ Run `magicpath-ai info -o json` to check auth status, project context, and CLI a
 - If the CLI is missing, invoke it with `npx magicpath-ai`.
 - If `auth.authenticated` is false, run `magicpath-ai login`, wait for browser auth to finish, then verify with `magicpath-ai whoami -o json`.
 
+## Working with Organizations
+
+Users may belong to organizations that own shared projects and themes. By default, `list-projects` and `search` return results from **all** workspaces (personal + every organization the user belongs to). Use filtering flags to narrow scope.
+
+### Discovering Organizations
+
+Run `magicpath-ai list-orgs -o json` to see the user's organizations:
+```json
+{ "organizations": [{ "id": "123", "name": "Acme Inc", "role": "ADMIN" }] }
+```
+
+### Filtering by Organization
+
+- **Default (no flag)**: `list-projects`, `search` include both personal and all organization projects — no extra flags needed for broad discovery.
+- **`--org "Acme Inc"` or `--org <orgId>`**: Filter to a specific organization. Works on `list-projects`, `search`, `list-themes`, and `get-theme`.
+- **`--personal`**: Show only the user's personal projects/components. Works on `list-projects` and `search`.
+
+### JSON Output
+
+Projects and search results include `ownerType` (`"personal"` or `"organization"`) and `ownerName` (user email or org name). Use these to tell the user where a component lives.
+
+### Discovering People
+
+Run `magicpath-ai list-members --org "Acme Inc" -o json` to see who's in an organization:
+```json
+{ "organization": { "id": "123", "name": "Acme Inc" }, "members": [{ "id": "456", "displayName": "Chloe Smith", "email": "chloe@acme.com", "role": "MEMBER" }] }
+```
+
+### Filtering by Person
+
+- **`--created-by <userId>`** on `list-components`: Filter to components that a specific user has created or edited. Use this after resolving a person's name to their user ID via `list-members`.
+- **`createdBy`** field on projects: Each project in `list-projects` includes `createdBy: { id, displayName }` showing who created it.
+- **`lastEditedBy`** field on components: Each component in `list-components` includes `lastEditedBy: { id, displayName }` showing who last edited it.
+
+**Important:** You can only see projects that the authenticated user has access to — your own personal projects and organization projects you're a member of. You **cannot** access another user's personal projects. When looking for another person's work, only search **organization projects** (`--org`), not personal projects. Personal projects are private to their owner unless someone is explicitly invited as a member.
+
+### Common Patterns
+
+- **"What was Chloe working on last?"** → `list-members --org "Acme Inc" -o json` to find Chloe's user ID → `list-projects --org "Acme Inc" -o json` to get **org projects only** → `list-components <projectId> --created-by <chloeId> --sort-by createdAt --order desc -o json` for each project. Report the most recent components. **Do not search personal projects for another user's work** — personal projects are private to their owner.
+- **"Show me the team's designs"** or **"what has Acme Inc created?"** → `list-orgs` to find the org, then `list-projects --org "Acme Inc" -o json`, then `list-components <projectId> -o json`.
+- **"Show me the latest design from the team"** → same as above, but use `--sort-by createdAt --order desc --limit 1` on `list-components`.
+- **"Who created this project/component?"** → check the `createdBy` field on projects or the `lastEditedBy` field on components from their respective list commands.
+- **"My designs"** without mentioning a team → the default (all projects) is usually correct. Only use `--personal` if they explicitly want to exclude org projects.
+- **"Use the team's theme"** → `list-themes --org "Acme Inc" -o json`, then `get-theme <name> --org "Acme Inc" -o json`.
+
 ## Workflow
 
-> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-themes`, `get-theme`, `selection`, `info`, `add`, `inspect`). This gives you structured output to work with instead of human-readable tables.
+> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-orgs`, `list-themes`, `get-theme`, `selection`, `info`, `add`, `inspect`). This gives you structured output to work with instead of human-readable tables.
 
 ### Phase 1: Discover
 
@@ -132,10 +179,18 @@ magicpath-ai login                    # one-click browser login
 magicpath-ai whoami -o json           # check auth status
 magicpath-ai info -o json             # full project context
 
+# Organizations and people
+magicpath-ai list-orgs -o json                 # list orgs you belong to
+magicpath-ai list-members --org "Acme" -o json # list members of an org
+
 # Find components (always use -o json)
-magicpath-ai search "input box" -o json        # search across all projects
-magicpath-ai list-projects -o json             # list all projects
+magicpath-ai search "input box" -o json        # search across all workspaces
+magicpath-ai search "button" --org "Acme" -o json  # search within an org
+magicpath-ai list-projects -o json             # list all projects (personal + org)
+magicpath-ai list-projects --org "Acme" -o json    # list only org projects
+magicpath-ai list-projects --personal -o json      # list only personal projects
 magicpath-ai list-components <id> -o json      # list components in a project
+magicpath-ai list-components <id> --created-by <userId> -o json  # filter by person
 
 # Inspect components
 magicpath-ai view <generatedName>              # preview in browser
@@ -146,7 +201,8 @@ magicpath-ai add <generatedName> --dry-run     # show what would be installed
 magicpath-ai add <generatedName> -y         # add to project (no prompts)
 
 # Themes (design systems)
-magicpath-ai list-themes -o json               # list all themes
+magicpath-ai list-themes -o json               # list personal themes
+magicpath-ai list-themes --org "Acme" -o json  # list org themes
 magicpath-ai get-theme <id-or-name> -o json    # get theme CSS vars, fonts, prompt
 
 # Current canvas selection
