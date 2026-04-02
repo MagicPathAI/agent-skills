@@ -173,3 +173,14 @@ Lists MagicPath components already installed in the current project by scanning 
 | `--path <path>` | `-p` | Custom components directory | src/components/magicpath |
 
 JSON output: `{ components: [{ name, folder, path, files, exportName, importStatement }], total, componentsPath }`
+
+### `selection` — Get current canvas selection
+
+```bash
+magicpath-ai selection
+magicpath-ai selection -o json
+```
+
+Returns the component(s) currently selected in the MagicPath web app canvas. Connects to the user's active canvas session in real-time to read selection state. Returns an empty list if the user has nothing selected or no canvas open.
+
+JSON output: `{ components: [{ id, name, generatedName, clientId, projectId, projectName }] }`

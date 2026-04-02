@@ -26,12 +26,13 @@ Run `magicpath-ai info -o json` to check auth status, project context, and CLI a
 
 ## Workflow
 
-> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-themes`, `get-theme`, `info`, `add`, `inspect`). This gives you structured output to work with instead of human-readable tables.
+> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-themes`, `get-theme`, `selection`, `info`, `add`, `inspect`). This gives you structured output to work with instead of human-readable tables.
 
 ### Phase 1: Discover
 
 1. **Check auth** — run `magicpath-ai whoami -o json` to verify authentication.
-2. **Find components** — use `magicpath-ai search <query> -o json` to search across all projects, or `list-projects -o json` then `list-components <projectId> -o json` to browse.
+2. **Check current selection** — if the user references "the selected component," "what I have open," or "the current design," run `magicpath-ai selection -o json`. If it returns components, use them directly — skip the search/confirm flow and proceed with the returned `generatedName`(s).
+3. **Find components** — use `magicpath-ai search <query> -o json` to search across all projects, or `list-projects -o json` then `list-components <projectId> -o json` to browse.
 3. **Understand components visually** — `search` and `list-components` results include a `previewImageUrl` field. Download and analyze these images to understand what each component looks like before recommending it. Preview images are for your own understanding — use the `view` command when the user needs to see a component.
 4. **Confirm with the user (STOP and wait)** — unless the user specified an exact generatedName, tell the user what you found (name, generatedName, project), open a browser preview with `magicpath-ai view <generatedName>`, and ask if it's the right component. If multiple matches, list them all and ask which one. **This is a STOP point — end your response here and wait for the user to reply. Do NOT proceed until the user explicitly confirms.** Do not run `add` or `inspect` yet.
 
@@ -147,6 +148,9 @@ magicpath-ai add <generatedName> -y         # add to project (no prompts)
 # Themes (design systems)
 magicpath-ai list-themes -o json               # list all themes
 magicpath-ai get-theme <id-or-name> -o json    # get theme CSS vars, fonts, prompt
+
+# Current canvas selection
+magicpath-ai selection -o json                 # get currently selected component(s)
 ```
 
 ## Key Concepts
