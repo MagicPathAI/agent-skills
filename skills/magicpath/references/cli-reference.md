@@ -11,7 +11,7 @@ magicpath-ai info              # human-readable
 magicpath-ai info -o json      # structured JSON
 ```
 
-Returns auth status, user info, organizations, projects (personal + org), and CLI version. The `organizations` array shows which orgs the user belongs to and their role. Use `list-members` for full member details of a specific org.
+Returns auth status, user info, teams, projects (personal + team), and CLI version. The `teams` array shows which teams the user belongs to and their role. Use `list-members` for full member details of a specific team.
 
 ### `login` — Authenticate
 
@@ -33,28 +33,28 @@ magicpath-ai whoami
 magicpath-ai whoami -o json
 ```
 
-### `list-orgs` — List organizations
+### `list-teams` — List teams
 
 ```bash
-magicpath-ai list-orgs
-magicpath-ai list-orgs -o json
+magicpath-ai list-teams
+magicpath-ai list-teams -o json
 ```
 
-Lists all organizations the user belongs to, with their role in each.
+Lists all teams the user belongs to, with their role in each.
 
-JSON output: `{ organizations: [{ id, name, role }] }`
+JSON output: `{ teams: [{ id, name, role }] }`
 
-### `list-members` — List members of an organization
+### `list-members` — List members of a team
 
 ```bash
-magicpath-ai list-members --org "Acme Inc"
-magicpath-ai list-members --org "Acme Inc" -o json
-magicpath-ai list-members --org <orgId> -o json
+magicpath-ai list-members --team "Acme Inc"
+magicpath-ai list-members --team "Acme Inc" -o json
+magicpath-ai list-members --team <teamId> -o json
 ```
 
-Lists all members of the specified organization. The `--org` flag is required and accepts a name (case-insensitive) or ID.
+Lists all members of the specified team. The `--team` flag is required and accepts a name (case-insensitive) or ID.
 
-JSON output: `{ organization: { id, name }, members: [{ id, displayName, email, role }] }`
+JSON output: `{ team: { id, name }, members: [{ id, displayName, email, role }] }`
 
 Use `list-members` to resolve a person's name to their user ID, then use `--created-by <userId>` on `list-components` to find their work.
 
@@ -64,19 +64,19 @@ Use `list-members` to resolve a person's name to their user ID, then use `--crea
 magicpath-ai search "input"
 magicpath-ai search "button" -o json
 magicpath-ai search "card" --limit 5
-magicpath-ai search "header" --org "Acme Inc" -o json
+magicpath-ai search "header" --team "Acme Inc" -o json
 magicpath-ai search "nav" --personal -o json
 ```
 
-Searches component names (case-insensitive substring match) across all accessible projects (personal + organization). Returns matches with project and workspace context. Each result includes `previewImageUrl` — use `list-components` or search results to get preview images when visual context is needed.
+Searches component names (case-insensitive substring match) across all accessible projects (personal + team). Returns matches with project and workspace context. Each result includes `previewImageUrl` — use `list-components` or search results to get preview images when visual context is needed.
 
 | Flag | Description | Default |
 |------|-------------|---------|
 | `--limit <n>` | Max results | 20 |
-| `--org <nameOrId>` | Search only within a specific organization | all |
+| `--team <nameOrId>` | Search only within a specific team | all |
 | `--personal` | Search only personal projects | false |
 
-JSON output includes `ownerType` (`"personal"` or `"organization"`) and `ownerName` on each result.
+JSON output includes `ownerType` (`"personal"` or `"team"`) and `ownerName` on each result.
 
 ### `list-projects` — List all projects
 
@@ -84,21 +84,21 @@ JSON output includes `ownerType` (`"personal"` or `"organization"`) and `ownerNa
 magicpath-ai list-projects
 magicpath-ai list-projects -o json
 magicpath-ai list-projects -o json --limit 10
-magicpath-ai list-projects --org "Acme Inc" -o json
+magicpath-ai list-projects --team "Acme Inc" -o json
 magicpath-ai list-projects --personal -o json
 ```
 
-By default, lists all accessible projects (personal + all organizations). Use `--org` or `--personal` to filter.
+By default, lists all accessible projects (personal + all teams). Use `--team` or `--personal` to filter.
 
 | Flag | Description | Default |
 |------|-------------|---------|
 | `--limit <n>` | Max results | all |
 | `--offset <n>` | Skip first N results | 0 |
-| `--org <nameOrId>` | Filter to a specific organization (name or ID) | all |
+| `--team <nameOrId>` | Filter to a specific team (name or ID) | all |
 | `--personal` | Show only personal projects | false |
 
 JSON output: `{ projects, pagination: { total, limit, offset, hasMore } }`. Each project includes:
-- `ownerType` (`"personal"` or `"organization"`) and `ownerName` (user email or org name)
+- `ownerType` (`"personal"` or `"team"`) and `ownerName` (user email or team name)
 - `createdBy` (object or null) — `{ id, displayName }` of the user who created this project
 
 ### `list-components` — List components in a project
@@ -131,14 +131,14 @@ JSON output: `{ components, pagination: { limit, hasNext, lastId } }`. Each comp
 ```bash
 magicpath-ai list-themes
 magicpath-ai list-themes -o json
-magicpath-ai list-themes --org "Acme Inc" -o json
+magicpath-ai list-themes --team "Acme Inc" -o json
 ```
 
-Lists design systems (themes) for the current user, or for a specific organization with `--org`.
+Lists design systems (themes) for the current user, or for a specific team with `--team`.
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--org <nameOrId>` | List themes for a specific organization | personal |
+| `--team <nameOrId>` | List themes for a specific team | personal |
 
 JSON output: `{ themes: [{ id, name, isPublic, createdAt, updatedAt }] }`
 
@@ -148,14 +148,14 @@ JSON output: `{ themes: [{ id, name, isPublic, createdAt, updatedAt }] }`
 magicpath-ai get-theme <themeId>
 magicpath-ai get-theme <themeId> -o json
 magicpath-ai get-theme "My Brand Theme" -o json    # lookup by name
-magicpath-ai get-theme "Brand" --org "Acme Inc" -o json  # lookup in org
+magicpath-ai get-theme "Brand" --team "Acme Inc" -o json  # lookup in team
 ```
 
-Fetches the full theme definition including CSS variables, fonts, and styling prompt. Accepts a numeric ID or a theme name (case-insensitive match). Use `--org` to look up themes within a specific organization.
+Fetches the full theme definition including CSS variables, fonts, and styling prompt. Accepts a numeric ID or a theme name (case-insensitive match). Use `--team` to look up themes within a specific team.
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--org <nameOrId>` | Look up theme within a specific organization | personal |
+| `--team <nameOrId>` | Look up theme within a specific team | personal |
 
 JSON output: `{ id, name, theme: { light: { "--var": "value", ... }, dark: { ... } }, defaultTheme, prompt?, fonts?, version }`
 
