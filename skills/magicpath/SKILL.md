@@ -73,7 +73,7 @@ Run `magicpath-ai list-members --team "Acme Inc" -o json` to see who's on a team
 
 ## Workflow
 
-> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-teams`, `list-themes`, `get-theme`, `selection`, `info`, `add`, `inspect`). This gives you structured output to work with instead of human-readable tables.
+> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-teams`, `list-themes`, `get-theme`, `selection`, `info`, `add`, `inspect`, `code context`, `code submit`, `code create`, `code status`). This gives you structured output to work with instead of human-readable tables.
 
 ### Phase 1: Discover
 
@@ -207,6 +207,13 @@ magicpath-ai get-theme <id-or-name> -o json    # get theme CSS vars, fonts, prom
 
 # Current canvas selection
 magicpath-ai selection -o json                 # get currently selected component(s)
+
+# Edit/create canvas components from code
+magicpath-ai code context <componentId> --dir ./mp-work -o json
+magicpath-ai code submit --dir ./mp-work --wait -o json
+magicpath-ai code start --project <projectId> --dir ./mp-new --name "Component Name" -o json
+magicpath-ai code submit --dir ./mp-new --wait -o json
+magicpath-ai code status <jobId> -o json
 ```
 
 ## Key Concepts
@@ -217,6 +224,29 @@ magicpath-ai selection -o json                 # get currently selected componen
 - Use `inspect` to inspect source code without installing — don't use `add` just to read code
 - MagicPath components are React/TypeScript source code — use `add` in JS/TS projects, use `inspect` + translate for other languages
 - **Themes** (design systems) contain CSS variables (`light`/`dark` maps), optional `fonts`, and an optional `prompt` with styling instructions for agents. "Theme" and "design system" are interchangeable. Use `list-themes` to browse, `get-theme` to fetch the full definition
+
+## Create/Edit MagicPath Canvas Components From Code
+
+Use this workflow when the user wants you to modify a MagicPath canvas component itself, not install a MagicPath component into another app. These commands publish back to the MagicPath canvas through the external-agent revision pipeline.
+
+**Strict code boundary:** only edit `src/App.tsx`, `src/index.css`, and `src/components/generated/**` inside the code working directory. Do not edit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles, dependency files, or arbitrary project files for this workflow.
+
+### Edit an existing canvas component
+
+1. Fetch context: `magicpath-ai code context <componentId> --dir <workdir> -o json`
+2. Edit only allowed files in `<workdir>`
+3. Submit and wait: `magicpath-ai code submit --dir <workdir> --wait -o json`
+4. If the result is `failed`, read the sanitized diagnostics, fix only allowed files, and run `code submit --wait` again
+5. If there is a conflict/stale base, run `code context` again before editing
+
+### Create a new canvas component
+
+1. Immediately create the pending component/revision first: `magicpath-ai code start --project <projectId> --dir <workdir> --name "Component Name" -o json`
+2. Then write `src/App.tsx`; optionally add `src/index.css` and `src/components/generated/**`
+3. Submit and wait: `magicpath-ai code submit --dir <workdir> --wait -o json`
+4. Check status later with `magicpath-ai code status <jobId> -o json`
+
+**Do not use MagicPath AI flows, `add`, `inspect`, or `integrate` for this external-code workflow.** `add`/`inspect` are for reusable registry components; `code ...` is for editing components on the user's MagicPath canvas.
 
 ## Current Project Context
 
