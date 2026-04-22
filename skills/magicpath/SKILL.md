@@ -13,6 +13,8 @@ user-invocable: true
 
 A platform for building, sharing, and installing UI components via AI. Components are added as source code to the user's project via the `magicpath-ai` CLI.
 
+MagicPath canvas components can also be created and edited directly from local code via the `magicpath-ai code ...` subcommands — see [Edit or create canvas components from code](#edit-or-create-canvas-components-from-code). That path is strict: only `src/App.tsx`, `src/index.css`, and files under `src/components/generated/` in the code working directory are editable.
+
 > **Terminology:** Users often refer to MagicPath components as "designs" — the two terms are interchangeable. When a user says "design," "my designs," or "that design," treat it as meaning a MagicPath component. Search, inspect, and install accordingly.
 >
 > Users also refer to MagicPath design systems as "themes." When a user says "theme," "my themes," or "use the X theme," they mean a MagicPath design system — a set of CSS variables, fonts, and styling instructions. Use `list-themes` and `get-theme` to work with them.
@@ -171,6 +173,40 @@ If the user has a theme they want applied, or references a brand/design system b
 - **`add` is for React/TypeScript projects only.** The `add` command writes `.tsx` files to `src/components/magicpath/` and installs npm dependencies. Only use `add` in JavaScript/TypeScript projects. For non-JS projects (Swift, Python, etc.), use `inspect` to read the component source, then translate the design and behavior into the project's language and framework.
 - **Never run `view` commands in parallel.** The `view` command opens a browser window for the user. Only open one preview at a time.
 
+## Edit or create canvas components from code
+
+Use this workflow when the user wants you to author or modify a MagicPath canvas component itself — not install an existing component into a separate application. The `code` subcommands operate on a working directory and a small manifest file (`magicpath-code.json`) that tracks which component and revision the directory belongs to.
+
+**Editable file boundary.** The `code` API only accepts full-file replacements for:
+
+- `src/App.tsx`
+- `src/index.css`
+- `src/components/generated/**`
+
+Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles, or any other file — they will be rejected.
+
+### Edit an existing component
+
+1. Run `magicpath-ai code context <componentId> --dir <workdir> -o json`. This writes the editable files and `magicpath-code.json` into `<workdir>`.
+2. Edit only the allowed files inside `<workdir>` (see the boundary above).
+3. Run `magicpath-ai code submit --dir <workdir> --wait -o json`.
+4. If the job result is `failed`, read the returned sanitized diagnostics, fix only allowed files, and submit again. Do not create a new component to work around a build failure.
+
+### Create a new component
+
+**Important experiential rule:** always run `code start` *before* writing component files. This registers the pending component on the canvas so the user sees your work-in-progress presence, not a silent agent.
+
+1. Run `magicpath-ai code start --project <projectId> --dir <workdir> --name "Component Name" -o json`. This creates the pending component and writes `magicpath-code.json`.
+2. Write `<workdir>/src/App.tsx` (required). Optionally add `<workdir>/src/index.css` and files under `<workdir>/src/components/generated/`.
+3. Run `magicpath-ai code submit --dir <workdir> --wait -o json`.
+4. If the build fails, fix only allowed files and re-run `code submit --wait`. Do not start a second component unless the user explicitly asks.
+
+> The `code create` command is a convenience that combines `start` and `submit` in one call. Prefer the explicit two-step flow — it makes your progress visible on the canvas while files are still being written.
+
+### Polling a job separately
+
+If you need to check job status after the fact (for example, after submitting without `--wait`), use `magicpath-ai code status <jobId> -o json`. It returns one of `pending`, `processing`, `completed`, `failed`, or `cancelled`.
+
 ## Quick Reference
 
 ```bash
@@ -207,6 +243,12 @@ magicpath-ai get-theme <id-or-name> -o json    # get theme CSS vars, fonts, prom
 
 # Current canvas selection
 magicpath-ai selection -o json                 # get currently selected component(s)
+
+# Author/edit canvas components from code (external-agent)
+magicpath-ai code context <componentId> --dir <workdir> -o json                           # checkout for editing
+magicpath-ai code start --project <projectId> --dir <workdir> --name "Name" -o json       # start a new pending component
+magicpath-ai code submit --dir <workdir> --wait -o json                                   # submit edits + wait for build
+magicpath-ai code status <jobId> -o json                                                  # poll a build job
 ```
 
 ## Key Concepts
@@ -217,6 +259,7 @@ magicpath-ai selection -o json                 # get currently selected componen
 - Use `inspect` to inspect source code without installing — don't use `add` just to read code
 - MagicPath components are React/TypeScript source code — use `add` in JS/TS projects, use `inspect` + translate for other languages
 - **Themes** (design systems) contain CSS variables (`light`/`dark` maps), optional `fonts`, and an optional `prompt` with styling instructions for agents. "Theme" and "design system" are interchangeable. Use `list-themes` to browse, `get-theme` to fetch the full definition
+- The `code` subcommands (`start`/`context`/`submit`/`create`/`status`) publish edits back to the MagicPath canvas. They are unrelated to `add`/`inspect`, which install reusable component source into an app.
 
 ## Current Project Context
 

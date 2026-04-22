@@ -238,3 +238,84 @@ magicpath-ai selection -o json
 Returns the component(s) currently selected in the MagicPath web app canvas. Connects to the user's active canvas session in real-time to read selection state. Returns an empty list if the user has nothing selected or no canvas open.
 
 JSON output: `{ components: [{ id, name, generatedName, clientId, projectId, projectName }] }`
+
+### `code` — Create/edit canvas components from local code
+
+The `code` subcommands let an external agent author or edit a MagicPath canvas component's source files locally, then submit them back to the platform. This is unrelated to `add`/`inspect`, which install reusable component source into an application.
+
+All `code` subcommands operate against a working directory and persist state in `<dir>/magicpath-code.json` (written by `start`, `context`, and `create`; read by `submit`).
+
+#### Editable file boundary
+
+The `code` API only accepts full-file replacements for:
+
+- `src/App.tsx`
+- `src/index.css`
+- `src/components/generated/**`
+
+It does **not** accept dependency installation, `package.json` edits, `src/main.tsx`, Vite config changes, lockfile edits, raw patches, or arbitrary repo files.
+
+#### `code start` — Create a pending component before writing code
+
+```bash
+magicpath-ai code start --project <projectId> --dir ./mp-new --name "Hero Card" -o json
+```
+
+Creates a component and pending revision on the canvas immediately, writes `magicpath-code.json` to `<dir>`, and enables external-agent canvas presence (Liveblocks cursor). Run this before generating files for a new canvas component — do not write files first and `create` after.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--project <projectId>` | Target MagicPath project ID (required) | — |
+| `--dir <dir>` | Working directory to initialize | `.` |
+| `--name <name>` | Component name | `External Agent Component` |
+
+#### `code context` — Checkout an existing component's editable files
+
+```bash
+magicpath-ai code context <componentId> --dir ./mp-work -o json
+```
+
+Writes `src/App.tsx`, `src/index.css`, `src/components/generated/**`, and `magicpath-code.json` into `<dir>`. Use this to edit an existing component.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--dir <dir>` | Working directory to write into | `.` |
+
+#### `code submit` — Submit local edits
+
+```bash
+magicpath-ai code submit --dir ./mp-work --wait -o json
+```
+
+Reads `magicpath-code.json`, computes the set of changed editable files, submits them as full-file replacements, and prints the resulting job/revision. Use `--wait` when the agent should fix build failures in the same turn.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--dir <dir>` | Working directory containing `magicpath-code.json` | `.` |
+| `--wait` | Wait for the build job to finish | false |
+| `--interval <ms>` | Polling interval when `--wait` is set | `2000` |
+
+If no editable files have changed, returns `{ status: "unchanged", componentId, revisionId }` without submitting.
+
+#### `code create` — Create a new component from already-written files (convenience)
+
+```bash
+magicpath-ai code create --project <projectId> --dir ./mp-new --name "Hero Card" --wait -o json
+```
+
+Convenience wrapper: internally runs `code start` and then uploads the files from `<dir>`. **Prefer explicit `code start` followed by `code submit`** — the split gives better canvas feedback (the pending component is visible while the agent is still writing code). `<dir>` must include `src/App.tsx`.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--project <projectId>` | Target MagicPath project ID (required) | — |
+| `--dir <dir>` | Working directory containing `src/App.tsx` | `.` |
+| `--name <name>` | Component name | `External Agent Component` |
+| `--wait` | Wait for the build job to finish | false |
+
+#### `code status` — Poll an external-agent build job
+
+```bash
+magicpath-ai code status <jobId> -o json
+```
+
+Returns `pending`, `processing`, `completed`, `failed`, or `cancelled`. Failed jobs include sanitized build diagnostics when available.
