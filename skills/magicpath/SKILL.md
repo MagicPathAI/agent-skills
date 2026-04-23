@@ -23,9 +23,11 @@ MagicPath canvas components can also be created and edited directly from local c
 
 ## First Step
 
+> **This skill targets the MagicPath preview environment (`preview.magicpath.ai`).** It requires the `@beta` build of the CLI, which has preview URLs baked in.
+
 Run `magicpath-ai info -o json` to check auth status, project context, and CLI availability.
 
-- If the CLI is missing, invoke it with `npx magicpath-ai`.
+- If the CLI is missing, **or** `cli.version` in the output does not end with `-beta.N`, install/update the preview build: `npm install -g magicpath-ai@beta`. Then re-run `magicpath-ai info -o json` to verify.
 - If `auth.authenticated` is false, run `magicpath-ai login`, wait for browser auth to finish, then verify with `magicpath-ai whoami -o json`.
 
 ## Working with Teams
