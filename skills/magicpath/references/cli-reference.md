@@ -261,7 +261,15 @@ It does **not** accept dependency installation, `package.json` edits, `src/main.
 magicpath-ai code start --project <projectId> --dir ./mp-new --name "Hero Card" -o json
 ```
 
-Creates a component and pending revision on the canvas immediately, writes `magicpath-code.json` to `<dir>`, and enables external-agent canvas presence (Liveblocks cursor). Run this before generating files for a new canvas component — do not write files first and `create` after.
+Creates a component and pending revision on the canvas immediately, enables external-agent canvas presence (Liveblocks cursor), and **scaffolds the starting file structure** into `<dir>`:
+
+- `magicpath-code.json` — manifest with component/revision IDs
+- `src/App.tsx` — pre-wired slim entry file that imports and renders the top-level component from `src/components/generated/<ComponentName>`
+- `src/components/generated/<ComponentName>.tsx` — stub named-export component ready to fill in
+
+The component filename is derived from `--name` (PascalCase, e.g. `"Hero Card"` → `HeroCard`). JSON output includes `scaffoldedPaths` listing the files that were written.
+
+Run this before generating files for a new canvas component — do not write files first and `create` after.
 
 | Flag | Description | Default |
 |------|-------------|---------|

@@ -75,7 +75,7 @@ Run `magicpath-ai list-members --team "Acme Inc" -o json` to see who's on a team
 
 ## Workflow
 
-> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-teams`, `list-themes`, `get-theme`, `selection`, `info`, `add`, `inspect`). This gives you structured output to work with instead of human-readable tables.
+> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-teams`, `list-themes`, `get-theme`, `selection`, `info`, `add`, `inspect`, `code`). This gives you structured output to work with instead of human-readable tables.
 
 ### Phase 1: Discover
 
@@ -185,23 +185,32 @@ Use this workflow when the user wants you to author or modify a MagicPath canvas
 
 Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles, or any other file — they will be rejected.
 
+**Do not use `add` or `inspect` for this workflow.** `add`/`inspect` are for installing reusable registry components into another app. `code ...` is for editing components on the user's MagicPath canvas — they are separate flows and must not be mixed.
+
 ### Edit an existing component
 
 1. Run `magicpath-ai code context <componentId> --dir <workdir> -o json`. This writes the editable files and `magicpath-code.json` into `<workdir>`.
 2. Edit only the allowed files inside `<workdir>` (see the boundary above).
 3. Run `magicpath-ai code submit --dir <workdir> --wait -o json`.
 4. If the job result is `failed`, read the returned sanitized diagnostics, fix only allowed files, and submit again. Do not create a new component to work around a build failure.
+5. If the submission reports a conflict or stale base, run `magicpath-ai code context <componentId> --dir <workdir> -o json` again to refresh the working directory before re-applying your edits.
 
 ### Create a new component
 
 **Important experiential rule:** always run `code start` *before* writing component files. This registers the pending component on the canvas so the user sees your work-in-progress presence, not a silent agent.
 
-1. Run `magicpath-ai code start --project <projectId> --dir <workdir> --name "Component Name" -o json`. This creates the pending component and writes `magicpath-code.json`.
-2. Write `<workdir>/src/App.tsx` (required). Optionally add `<workdir>/src/index.css` and files under `<workdir>/src/components/generated/`.
-3. Run `magicpath-ai code submit --dir <workdir> --wait -o json`.
-4. If the build fails, fix only allowed files and re-run `code submit --wait`. Do not start a second component unless the user explicitly asks.
+**Expected file structure.** A MagicPath component has a slim `src/App.tsx` that imports and renders a top-level component from `src/components/generated/`. The actual implementation lives in `src/components/generated/<ComponentName>.tsx` (PascalCase filename, named export). Larger components should be split into additional sibling files under `src/components/generated/`, each importing what it needs. This is how every existing MagicPath component is structured — compare against what `code context` returns for any existing component.
 
-> The `code create` command is a convenience that combines `start` and `submit` in one call. Prefer the explicit two-step flow — it makes your progress visible on the canvas while files are still being written.
+**The CLI scaffolds this structure for you on `code start`.** After `code start` returns, the working directory already contains a pre-wired `src/App.tsx` and a stub `src/components/generated/<ComponentName>.tsx`. The component filename matches the PascalCase form of `--name` (e.g. `--name "Hero Card"` → `HeroCard.tsx`). Your job is to fill in the stub — **do not rewrite `App.tsx`**, it's already correct. The only reasons to edit `App.tsx` are to change the `theme` (`'light'`/`'dark'`) or `container` (`'centered'`/`'none'`) values at the top.
+
+Steps:
+1. Run `magicpath-ai code start --project <projectId> --dir <workdir> --name "Component Name" -o json`. Creates the pending component, scaffolds the slim `App.tsx` + stub, and writes `magicpath-code.json`.
+2. Fill in `<workdir>/src/components/generated/<ComponentName>.tsx` with the component implementation. Split into additional files in the same directory if the component is substantial.
+3. Optionally edit `<workdir>/src/index.css` for custom styles.
+4. Run `magicpath-ai code submit --dir <workdir> --wait -o json`.
+5. If the build fails, fix the component files and re-run `code submit --wait`. Do not start a second component unless the user explicitly asks.
+
+> The `code create` command is a convenience that combines `start` and `submit` in one call. Prefer the explicit two-step flow — it makes your progress visible on the canvas while files are still being written, and it gives you the scaffolded starting point to work from.
 
 ### Polling a job separately
 
