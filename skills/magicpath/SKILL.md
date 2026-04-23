@@ -185,12 +185,14 @@ Use this workflow when the user wants you to author or modify a MagicPath canvas
 
 Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles, or any other file — they will be rejected.
 
+**Deleting and renaming files is supported in edit mode.** To delete an editable file, just remove it from `<workdir>` — `code submit` detects the deletion and propagates it. A rename is a delete + a write in the same submit. In create mode, there's nothing to delete; just don't write the file.
+
 **Do not use `add` or `inspect` for this workflow.** `add`/`inspect` are for installing reusable registry components into another app. `code ...` is for editing components on the user's MagicPath canvas — they are separate flows and must not be mixed.
 
 ### Edit an existing component
 
 1. Run `magicpath-ai code context <componentId> --dir <workdir> -o json`. This writes the editable files and `magicpath-code.json` into `<workdir>`.
-2. Edit only the allowed files inside `<workdir>` (see the boundary above).
+2. Edit, add, or delete allowed files inside `<workdir>` (see the boundary above). When you remove the last usage of a sub-component file, delete its source file too — don't leave orphan files in the revision. Renames are delete-plus-write.
 3. Run `magicpath-ai code submit --dir <workdir> --wait -o json`.
 4. If the job result is `failed`, read the returned sanitized diagnostics, fix only allowed files, and submit again. Do not create a new component to work around a build failure.
 5. If the submission reports a conflict or stale base, run `magicpath-ai code context <componentId> --dir <workdir> -o json` again to refresh the working directory before re-applying your edits.

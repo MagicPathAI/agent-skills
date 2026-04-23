@@ -295,7 +295,7 @@ Writes `src/App.tsx`, `src/index.css`, `src/components/generated/**`, and `magic
 magicpath-ai code submit --dir ./mp-work --wait -o json
 ```
 
-Reads `magicpath-code.json`, computes the set of changed editable files, submits them as full-file replacements, and prints the resulting job/revision. Use `--wait` when the agent should fix build failures in the same turn.
+Reads `magicpath-code.json`, computes both the set of changed editable files and any files that were removed from `<dir>` since the last `context`/`start`/successful `submit`, and submits them together (changes as full-file replacements, removals as `deletedPaths`). Prints the resulting job/revision. Use `--wait` when the agent should fix build failures in the same turn.
 
 | Flag | Description | Default |
 |------|-------------|---------|
@@ -303,7 +303,9 @@ Reads `magicpath-code.json`, computes the set of changed editable files, submits
 | `--wait` | Wait for the build job to finish | false |
 | `--interval <ms>` | Polling interval when `--wait` is set | `2000` |
 
-If no editable files have changed, returns `{ status: "unchanged", componentId, revisionId }` without submitting.
+To delete a file, just remove it from `<dir>` before running `submit` — the deletion is inferred from the manifest baseline. Deletion propagation is active only in edit mode; in create mode, simply don't write the file. The JSON output includes `deletedPaths: [...]` listing what was removed.
+
+If no editable files have changed and nothing has been deleted, returns `{ status: "unchanged", componentId, revisionId }` without submitting.
 
 #### `code create` — Create a new component from already-written files (convenience)
 
