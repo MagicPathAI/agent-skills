@@ -235,9 +235,30 @@ magicpath-ai selection
 magicpath-ai selection -o json
 ```
 
-Returns the component(s) currently selected in the MagicPath web app canvas. Connects to the user's active canvas session in real-time to read selection state. Returns an empty list if the user has nothing selected or no canvas open.
+Returns the component(s) currently selected in the MagicPath web app canvas, along with the project(s) the user has open. Returns empty `components` if the user has nothing selected, and empty `projects` if no canvas is open.
 
-JSON output: `{ components: [{ id, name, generatedName, clientId, projectId, projectName }] }`
+JSON output: `{ projects: [{ id, name, ownerType, ownerName }], components: [{ id, name, generatedName, clientId, projectId, projectName }] }`
+
+Notes:
+- `projects` is the same shape returned by `active-project` — calling `selection` gives you both signals in one round-trip.
+- `components` may be empty while `projects` is non-empty (project open, nothing selected). Use that to decide whether to fall back to listing or searching components.
+- If only the open project is needed (not the selection), prefer `active-project` — it is faster than `selection`.
+
+### `active-project` — Get the project(s) the user currently has open
+
+```bash
+magicpath-ai active-project
+magicpath-ai active-project -o json
+```
+
+Returns the project(s) the user currently has open in the MagicPath web app. Use this when you need the user's working project but no specific component has been selected. Returns an empty list if the user has no active canvas session.
+
+JSON output: `{ projects: [{ id, name, ownerType, ownerName }] }`
+
+Notes:
+- Multiple projects can be returned if the user has multiple tabs open.
+- `active-project` is the lighter of the two commands — it returns only the open project(s), while `selection` returns those *plus* any selected components and is more expensive. Prefer `selection` when the user references a component; use `active-project` when they only need the project.
+- If a project is open but cannot be resolved against the user's accessible projects, the entry is returned with `name`, `ownerType`, and `ownerName` set to `null` and only the `id` populated.
 
 ### `code` — Create/edit canvas components from local code
 

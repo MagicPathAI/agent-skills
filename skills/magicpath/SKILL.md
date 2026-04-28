@@ -77,22 +77,23 @@ Run `magicpath-ai list-members --team "Acme Inc" -o json` to see who's on a team
 
 ## Workflow
 
-> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-teams`, `list-themes`, `get-theme`, `selection`, `info`, `add`, `inspect`, `code`). This gives you structured output to work with instead of human-readable tables.
+> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-teams`, `list-themes`, `get-theme`, `selection`, `active-project`, `info`, `add`, `inspect`, `code`). This gives you structured output to work with instead of human-readable tables.
 
 ### Phase 1: Discover
 
 1. **Check auth** — run `magicpath-ai whoami -o json` to verify authentication.
-2. **Check current selection** — if the user references "the selected component," "what I have open," or "the current design," run `magicpath-ai selection -o json`. If it returns components, use them directly — skip the search/confirm flow and proceed with the returned `generatedName`(s).
-3. **Find components** — use `magicpath-ai search <query> -o json` to search across all projects, or `list-projects -o json` then `list-components <projectId> -o json` to browse.
-3. **Understand components visually** — `search` and `list-components` results include a `previewImageUrl` field. Download and analyze these images to understand what each component looks like before recommending it. Preview images are for your own understanding — use the `view` command when the user needs to see a component.
-4. **Confirm with the user (STOP and wait)** — unless the user specified an exact generatedName, tell the user what you found (name, generatedName, project), open a browser preview with `magicpath-ai view <generatedName>`, and ask if it's the right component. If multiple matches, list them all and ask which one. **This is a STOP point — end your response here and wait for the user to reply. Do NOT proceed until the user explicitly confirms.** Do not run `add` or `inspect` yet.
+2. **Check current selection** — if the user references "the selected component," "the design I have selected," or otherwise points at a *specific component*, run `magicpath-ai selection -o json`. If it returns components, use them directly — skip the search/confirm flow and proceed with the returned `generatedName`(s).
+3. **Check the active project** — if the user references "the project I have open," "this project," "what I'm working on," or otherwise implies a working project context without naming a specific component, run `magicpath-ai active-project -o json`. It returns the project(s) the user currently has open in their browser, even when nothing is selected. If it returns one project, treat it as the working project and skip the project picker. If it returns multiple, list them and ask which one. If it returns an empty list, the user has no canvas open — reach for `list-projects` and ask the user. Pick the right command for what the user said: `selection` for a referenced component, `active-project` for a referenced project, `list-projects` + ask if neither. (Note that `selection` also returns the active projects in its output, so when the user references a component you already get the project for free — no separate `active-project` call needed.)
+4. **Find components** — use `magicpath-ai search <query> -o json` to search across all projects, or `list-projects -o json` then `list-components <projectId> -o json` to browse. If `active-project` already gave you a project, scope your search to it via `list-components <projectId> -o json` instead of searching every workspace.
+5. **Understand components visually** — `search` and `list-components` results include a `previewImageUrl` field. Download and analyze these images to understand what each component looks like before recommending it. Preview images are for your own understanding — use the `view` command when the user needs to see a component.
+6. **Confirm with the user (STOP and wait)** — unless the user specified an exact generatedName, tell the user what you found (name, generatedName, project), open a browser preview with `magicpath-ai view <generatedName>`, and ask if it's the right component. If multiple matches, list them all and ask which one. **This is a STOP point — end your response here and wait for the user to reply. Do NOT proceed until the user explicitly confirms.** Do not run `add` or `inspect` yet.
 
 ### Phase 2: Understand the Target Context
 
 > **This phase is critical.** Before installing anything, you MUST understand where the component is going and what it needs to do there. Skipping this leads to components that look right but behave wrong.
 
-5. **Inspect the MagicPath component source** — use `magicpath-ai inspect <generatedName> -o json` to read the source code. Identify what it renders, what props it expects, and what assumptions it makes about layout (fixed widths, absolute positioning, etc.).
-6. **Read the target codebase context** — before installing, read the file(s) where the component will live. Understand:
+7. **Inspect the MagicPath component source** — use `magicpath-ai inspect <generatedName> -o json` to read the source code. Identify what it renders, what props it expects, and what assumptions it makes about layout (fixed widths, absolute positioning, etc.).
+8. **Read the target codebase context** — before installing, read the file(s) where the component will live. Understand:
    - **Existing functionality**: If replacing a component, what does the current one do? What callbacks, state, API calls, navigation, validation, or side effects does it handle? Every piece of existing behavior must be preserved or consciously addressed.
    - **Layout context**: What is the parent layout? Is it a flex/grid container? What are the responsive breakpoints? How does spacing work? A component that looks perfect in isolation can break a layout if its sizing assumptions don't match.
    - **Data flow**: What props, context, or state does the surrounding code provide? What does it expect back (callbacks, form data, events)?
@@ -111,8 +112,8 @@ If the user has a theme they want applied, or references a brand/design system b
 
 ### Phase 3: Install and Adapt
 
-7. **Add to project** — use `magicpath-ai add <generatedName> -y` to install component files. Always pass `-y` in non-interactive contexts. If this is a **non-React project** (Swift, Python, etc.), **do not run `add`** — use `magicpath-ai inspect <generatedName> -o json` to read the source as a reference, then recreate the component in the target language and framework.
-8. **Adapt the component for production use** — MagicPath components are design artifacts: they capture visual intent and structure, but they are often not production-ready out of the box. After adding, you MUST edit the component files to:
+9. **Add to project** — use `magicpath-ai add <generatedName> -y` to install component files. Always pass `-y` in non-interactive contexts. If this is a **non-React project** (Swift, Python, etc.), **do not run `add`** — use `magicpath-ai inspect <generatedName> -o json` to read the source as a reference, then recreate the component in the target language and framework.
+10. **Adapt the component for production use** — MagicPath components are design artifacts: they capture visual intent and structure, but they are often not production-ready out of the box. After adding, you MUST edit the component files to:
    - **Make it responsive**: Replace any hardcoded widths/heights (e.g., `w-[300px]`) with responsive utilities (`w-full max-w-sm`, responsive breakpoints like `md:w-64 lg:w-80`). A design may show a single viewport — your job is to make it work across all viewports.
    - **Add real interactivity**: Replace static/placeholder content with actual props, state, and event handlers. A MagicPath button that says "Submit" needs an `onClick` prop and loading state. A form needs validation and `onSubmit`.
    - **Wire up data flow**: Connect the component to the app's actual data — props from parents, context providers, API calls, router state. Don't leave mock data in place.
@@ -121,8 +122,8 @@ If the user has a theme they want applied, or references a brand/design system b
 
 ### Phase 4: Integrate into the Page
 
-9. **Import and render** — import the component using the `importStatement` from the add output. Pass the props you've defined.
-10. **Verify layout fit** — after placing the component, review the parent layout to ensure it integrates cleanly. Check that the component doesn't overflow, create unexpected gaps, or break the responsive flow of the page.
+11. **Import and render** — import the component using the `importStatement` from the add output. Pass the props you've defined.
+12. **Verify layout fit** — after placing the component, review the parent layout to ensure it integrates cleanly. Check that the component doesn't overflow, create unexpected gaps, or break the responsive flow of the page.
 
 ## Design-to-Production Mindset
 
@@ -254,8 +255,9 @@ magicpath-ai list-themes -o json                 # list personal themes
 magicpath-ai list-themes --team "Acme" -o json   # list team themes
 magicpath-ai get-theme <id-or-name> -o json    # get theme CSS vars, fonts, prompt
 
-# Current canvas selection
+# Current canvas context
 magicpath-ai selection -o json                 # get currently selected component(s)
+magicpath-ai active-project -o json            # get the project(s) the user has open
 
 # Author/edit canvas components from code (external-agent)
 magicpath-ai code context <componentId> --dir <workdir> -o json                           # checkout for editing
