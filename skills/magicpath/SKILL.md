@@ -82,7 +82,7 @@ Run `magicpath-ai list-members --team "Acme Inc" -o json` to see who's on a team
 ### Phase 1: Discover
 
 1. **Check auth** — run `magicpath-ai whoami -o json` to verify authentication.
-2. **Check current selection** — if the user references "the selected component," "the design I have selected," or otherwise points at a *specific component*, run `magicpath-ai selection -o json`. If it returns components, use them directly — skip the search/confirm flow and proceed with the returned `generatedName`(s).
+2. **Check current selection** — if the user references "the selected component," "the design I have selected," or otherwise points at a *specific component*, run `magicpath-ai selection -o json`. If it returns components, use them directly — skip the search/confirm flow and proceed with the returned `generatedName`(s). Each returned component also includes `selectedRevisionId`, the revision currently shown for that component on the canvas. When a downstream command accepts a revision (such as `code context --revision`), pass this value through so the operation targets the version the user is looking at rather than whichever revision happens to be canonical in the database.
 3. **Check the active project** — if the user references "the project I have open," "this project," "what I'm working on," or otherwise implies a working project context without naming a specific component, run `magicpath-ai active-project -o json`. It returns the project(s) the user currently has open in their browser, even when nothing is selected. If it returns one project, treat it as the working project and skip the project picker. If it returns multiple, list them and ask which one. If it returns an empty list, the user has no canvas open — reach for `list-projects` and ask the user. Pick the right command for what the user said: `selection` for a referenced component, `active-project` for a referenced project, `list-projects` + ask if neither. (Note that `selection` also returns the active projects in its output, so when the user references a component you already get the project for free — no separate `active-project` call needed.)
 4. **Find components** — use `magicpath-ai search <query> -o json` to search across all projects, or `list-projects -o json` then `list-components <projectId> -o json` to browse. If `active-project` already gave you a project, scope your search to it via `list-components <projectId> -o json` instead of searching every workspace.
 5. **Understand components visually** — `search` and `list-components` results include a `previewImageUrl` field. Download and analyze these images to understand what each component looks like before recommending it. Preview images are for your own understanding — use the `view` command when the user needs to see a component.
@@ -194,7 +194,7 @@ Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles,
 
 ### Edit an existing component
 
-1. Run `magicpath-ai code context <componentId> --dir <workdir> -o json`. This writes the editable files and `magicpath-code.json` into `<workdir>`.
+1. Run `magicpath-ai code context <componentId> --dir <workdir> -o json`. This writes the editable files and `magicpath-code.json` into `<workdir>`. By default, the CLI checks out the component's currently selected revision. To check out a specific revision instead, pass `--revision <revisionId>` — useful when the user is viewing or referring to a non-current revision (e.g. a value carried through from `magicpath-ai selection`).
 2. Edit, add, or delete allowed files inside `<workdir>` (see the boundary above). When you remove the last usage of a sub-component file, delete its source file too — don't leave orphan files in the revision. Renames are delete-plus-write.
 3. Run `magicpath-ai code submit --dir <workdir> --wait -o json`.
 4. If the job result is `failed`, read the returned sanitized diagnostics, fix only allowed files, and submit again. Do not create a new component to work around a build failure.
@@ -260,7 +260,8 @@ magicpath-ai selection -o json                 # get currently selected componen
 magicpath-ai active-project -o json            # get the project(s) the user has open
 
 # Author/edit canvas components from code (external-agent)
-magicpath-ai code context <componentId> --dir <workdir> -o json                           # checkout for editing
+magicpath-ai code context <componentId> --dir <workdir> -o json                           # checkout for editing (uses component's currently selected revision)
+magicpath-ai code context <componentId> --revision <revisionId> --dir <workdir> -o json    # checkout a specific revision
 magicpath-ai code start --project <projectId> --dir <workdir> --name "Name" -o json       # start a new pending component
 magicpath-ai code submit --dir <workdir> --wait -o json                                   # submit edits + wait for build
 magicpath-ai code status <jobId> -o json                                                  # poll a build job
