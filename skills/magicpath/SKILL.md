@@ -1,11 +1,11 @@
 ---
 name: magicpath
 description: Search, preview, inspect, and install MagicPath UI components with the magicpath-ai CLI. Use when the user mentions MagicPath, wants to browse or search MagicPath components, preview one, or add one to their project. Also use when the user refers to "designs" — in MagicPath, designs are created and stored as components. Also use when the user mentions themes or theming — MagicPath themes (design systems) contain CSS variables, fonts, and styling instructions. Also use when the user asks about MagicPath teams, members, or who worked on something — MagicPath supports teams with shared projects, team members, and attribution tracking.
-compatibility: Requires the magicpath-ai CLI on PATH, network access to MagicPath, and browser access for login or preview flows.
+compatibility: Requires Node.js (for npx), network access to MagicPath, and browser access for login or preview flows.
 metadata:
   author: MagicPathAI
   source: https://github.com/MagicPathAI/agent-skills
-allowed-tools: Bash(magicpath-ai *)
+allowed-tools: Bash(npx -y magicpath-ai@beta *)
 user-invocable: true
 ---
 
@@ -13,7 +13,7 @@ user-invocable: true
 
 A platform for building, sharing, and installing UI components via AI. Components are added as source code to the user's project via the `magicpath-ai` CLI.
 
-MagicPath canvas components can also be created and edited directly from local code via the `magicpath-ai code ...` subcommands — see [Edit or create canvas components from code](#edit-or-create-canvas-components-from-code). That path is strict: only `src/App.tsx`, `src/index.css`, and files under `src/components/generated/` in the code working directory are editable.
+MagicPath canvas components can also be created and edited directly from local code via the `npx -y magicpath-ai@beta code ...` subcommands — see [Edit or create canvas components from code](#edit-or-create-canvas-components-from-code). That path is strict: only `src/App.tsx`, `src/index.css`, and files under `src/components/generated/` in the code working directory are editable.
 
 > **Terminology:** Users often refer to MagicPath components as "designs" — the two terms are interchangeable. When a user says "design," "my designs," or "that design," treat it as meaning a MagicPath component. Search, inspect, and install accordingly.
 >
@@ -23,12 +23,11 @@ MagicPath canvas components can also be created and edited directly from local c
 
 ## First Step
 
-> **This skill targets the MagicPath preview environment (`preview.magicpath.ai`).** It requires the `@beta` build of the CLI, which has preview URLs baked in.
+> **This skill targets the MagicPath preview environment (`preview.magicpath.ai`).** All commands invoke the CLI via `npx -y magicpath-ai@beta`, which fetches the latest `@beta` build on first use and on cache expiry. The `@beta` build has preview URLs baked in. Do not install the CLI globally — always use the `npx` form below.
 
-Run `magicpath-ai info -o json` to check auth status, project context, and CLI availability.
+Run `npx -y magicpath-ai@beta info -o json` to check auth status and project context. The first invocation may take a few seconds as `npx` downloads the package; subsequent calls are fast.
 
-- If the CLI is missing, **or** `cli.version` in the output does not end with `-beta.N`, install/update the preview build: `npm install -g magicpath-ai@beta`. Then re-run `magicpath-ai info -o json` to verify.
-- If `auth.authenticated` is false, run `magicpath-ai login`, wait for browser auth to finish, then verify with `magicpath-ai whoami -o json`.
+- If `auth.authenticated` is false, run `npx -y magicpath-ai@beta login`, wait for browser auth to finish, then verify with `npx -y magicpath-ai@beta whoami -o json`.
 
 ## Working with Teams
 
@@ -36,7 +35,7 @@ Users may belong to teams that own shared projects and themes. By default, `list
 
 ### Discovering Teams
 
-Run `magicpath-ai list-teams -o json` to see the user's teams:
+Run `npx -y magicpath-ai@beta list-teams -o json` to see the user's teams:
 ```json
 { "teams": [{ "id": "123", "name": "Acme Inc", "role": "ADMIN" }] }
 ```
@@ -53,7 +52,7 @@ Projects and search results include `ownerType` (`"personal"` or `"team"`) and `
 
 ### Discovering People
 
-Run `magicpath-ai list-members --team "Acme Inc" -o json` to see who's on a team:
+Run `npx -y magicpath-ai@beta list-members --team "Acme Inc" -o json` to see who's on a team:
 ```json
 { "team": { "id": "123", "name": "Acme Inc" }, "members": [{ "id": "456", "displayName": "Chloe Smith", "email": "chloe@acme.com", "role": "MEMBER" }] }
 ```
@@ -81,18 +80,18 @@ Run `magicpath-ai list-members --team "Acme Inc" -o json` to see who's on a team
 
 ### Phase 1: Discover
 
-1. **Check auth** — run `magicpath-ai whoami -o json` to verify authentication.
-2. **Check current selection** — if the user references "the selected component," "the design I have selected," or otherwise points at a *specific component*, run `magicpath-ai selection -o json`. If it returns components, use them directly — skip the search/confirm flow and proceed with the returned `generatedName`(s). Each returned component also includes `selectedRevisionId`, the revision currently shown for that component on the canvas. When a downstream command accepts a revision (such as `code context --revision`), pass this value through so the operation targets the version the user is looking at rather than whichever revision happens to be canonical in the database.
-3. **Check the active project** — if the user references "the project I have open," "this project," "what I'm working on," or otherwise implies a working project context without naming a specific component, run `magicpath-ai active-project -o json`. It returns the project(s) the user currently has open in their browser, even when nothing is selected. If it returns one project, treat it as the working project and skip the project picker. If it returns multiple, list them and ask which one. If it returns an empty list, the user has no canvas open — reach for `list-projects` and ask the user. Pick the right command for what the user said: `selection` for a referenced component, `active-project` for a referenced project, `list-projects` + ask if neither. (Note that `selection` also returns the active projects in its output, so when the user references a component you already get the project for free — no separate `active-project` call needed.)
-4. **Find components** — use `magicpath-ai search <query> -o json` to search across all projects, or `list-projects -o json` then `list-components <projectId> -o json` to browse. If `active-project` already gave you a project, scope your search to it via `list-components <projectId> -o json` instead of searching every workspace.
+1. **Check auth** — run `npx -y magicpath-ai@beta whoami -o json` to verify authentication.
+2. **Check current selection** — if the user references "the selected component," "the design I have selected," or otherwise points at a *specific component*, run `npx -y magicpath-ai@beta selection -o json`. If it returns components, use them directly — skip the search/confirm flow and proceed with the returned `generatedName`(s). Each returned component also includes `selectedRevisionId`, the revision currently shown for that component on the canvas. When a downstream command accepts a revision (such as `code context --revision`), pass this value through so the operation targets the version the user is looking at rather than whichever revision happens to be canonical in the database.
+3. **Check the active project** — if the user references "the project I have open," "this project," "what I'm working on," or otherwise implies a working project context without naming a specific component, run `npx -y magicpath-ai@beta active-project -o json`. It returns the project(s) the user currently has open in their browser, even when nothing is selected. If it returns one project, treat it as the working project and skip the project picker. If it returns multiple, list them and ask which one. If it returns an empty list, the user has no canvas open — reach for `list-projects` and ask the user. Pick the right command for what the user said: `selection` for a referenced component, `active-project` for a referenced project, `list-projects` + ask if neither. (Note that `selection` also returns the active projects in its output, so when the user references a component you already get the project for free — no separate `active-project` call needed.)
+4. **Find components** — use `npx -y magicpath-ai@beta search <query> -o json` to search across all projects, or `list-projects -o json` then `list-components <projectId> -o json` to browse. If `active-project` already gave you a project, scope your search to it via `list-components <projectId> -o json` instead of searching every workspace.
 5. **Understand components visually** — `search` and `list-components` results include a `previewImageUrl` field. Download and analyze these images to understand what each component looks like before recommending it. Preview images are for your own understanding — use the `view` command when the user needs to see a component.
-6. **Confirm with the user (STOP and wait)** — unless the user specified an exact generatedName, tell the user what you found (name, generatedName, project), open a browser preview with `magicpath-ai view <generatedName>`, and ask if it's the right component. If multiple matches, list them all and ask which one. **This is a STOP point — end your response here and wait for the user to reply. Do NOT proceed until the user explicitly confirms.** Do not run `add` or `inspect` yet.
+6. **Confirm with the user (STOP and wait)** — unless the user specified an exact generatedName, tell the user what you found (name, generatedName, project), open a browser preview with `npx -y magicpath-ai@beta view <generatedName>`, and ask if it's the right component. If multiple matches, list them all and ask which one. **This is a STOP point — end your response here and wait for the user to reply. Do NOT proceed until the user explicitly confirms.** Do not run `add` or `inspect` yet.
 
 ### Phase 2: Understand the Target Context
 
 > **This phase is critical.** Before installing anything, you MUST understand where the component is going and what it needs to do there. Skipping this leads to components that look right but behave wrong.
 
-7. **Inspect the MagicPath component source** — use `magicpath-ai inspect <generatedName> -o json` to read the source code. Identify what it renders, what props it expects, and what assumptions it makes about layout (fixed widths, absolute positioning, etc.).
+7. **Inspect the MagicPath component source** — use `npx -y magicpath-ai@beta inspect <generatedName> -o json` to read the source code. Identify what it renders, what props it expects, and what assumptions it makes about layout (fixed widths, absolute positioning, etc.).
 8. **Read the target codebase context** — before installing, read the file(s) where the component will live. Understand:
    - **Existing functionality**: If replacing a component, what does the current one do? What callbacks, state, API calls, navigation, validation, or side effects does it handle? Every piece of existing behavior must be preserved or consciously addressed.
    - **Layout context**: What is the parent layout? Is it a flex/grid container? What are the responsive breakpoints? How does spacing work? A component that looks perfect in isolation can break a layout if its sizing assumptions don't match.
@@ -103,8 +102,8 @@ Run `magicpath-ai list-members --team "Acme Inc" -o json` to see who's on a team
 
 If the user has a theme they want applied, or references a brand/design system by name:
 
-1. **List available themes** — run `magicpath-ai list-themes -o json` to see all themes.
-2. **Get the theme definition** — run `magicpath-ai get-theme <id-or-name> -o json` to fetch the full definition.
+1. **List available themes** — run `npx -y magicpath-ai@beta list-themes -o json` to see all themes.
+2. **Get the theme definition** — run `npx -y magicpath-ai@beta get-theme <id-or-name> -o json` to fetch the full definition.
 3. **Read the `prompt` field** — if present, this contains natural-language styling instructions from the designer (e.g., "use rounded corners, prefer shadows over borders, use the brand blue for CTAs"). Follow these instructions when adapting components.
 4. **Apply CSS variables** — the theme's `light` and `dark` objects map CSS variable names to values (e.g., `--background: #ffffff`, `--primary: #3b82f6`). When adapting MagicPath components, use these CSS variables instead of hardcoded colors: `bg-[var(--background)]`, `text-[var(--primary)]`, etc. Ensure the component respects `defaultTheme` (light or dark).
 5. **Handle fonts** — if the theme includes `fonts`, ensure the project loads these fonts (Google Fonts link or `@font-face` declarations for custom fonts) and that components reference them via the theme's font CSS variables (e.g., `font-family: var(--font-body)`).
@@ -112,7 +111,7 @@ If the user has a theme they want applied, or references a brand/design system b
 
 ### Phase 3: Install and Adapt
 
-9. **Add to project** — use `magicpath-ai add <generatedName> -y` to install component files. Always pass `-y` in non-interactive contexts. If this is a **non-React project** (Swift, Python, etc.), **do not run `add`** — use `magicpath-ai inspect <generatedName> -o json` to read the source as a reference, then recreate the component in the target language and framework.
+9. **Add to project** — use `npx -y magicpath-ai@beta add <generatedName> -y` to install component files. Always pass `-y` in non-interactive contexts. If this is a **non-React project** (Swift, Python, etc.), **do not run `add`** — use `npx -y magicpath-ai@beta inspect <generatedName> -o json` to read the source as a reference, then recreate the component in the target language and framework.
 10. **Adapt the component for production use** — MagicPath components are design artifacts: they capture visual intent and structure, but they are often not production-ready out of the box. After adding, you MUST edit the component files to:
    - **Make it responsive**: Replace any hardcoded widths/heights (e.g., `w-[300px]`) with responsive utilities (`w-full max-w-sm`, responsive breakpoints like `md:w-64 lg:w-80`). A design may show a single viewport — your job is to make it work across all viewports.
    - **Add real interactivity**: Replace static/placeholder content with actual props, state, and event handlers. A MagicPath button that says "Submit" needs an `onClick` prop and loading state. A form needs validation and `onSubmit`.
@@ -146,8 +145,8 @@ If the user has a theme they want applied, or references a brand/design system b
 
 **Replacing an existing component** (e.g., swapping an old login form for a MagicPath design):
 1. Read the old component thoroughly — list every prop, callback, validation rule, and side effect
-2. Inspect the MagicPath component source with `magicpath-ai inspect <generatedName> -o json`
-3. Install the MagicPath component with `magicpath-ai add <generatedName> -y`
+2. Inspect the MagicPath component source with `npx -y magicpath-ai@beta inspect <generatedName> -o json`
+3. Install the MagicPath component with `npx -y magicpath-ai@beta add <generatedName> -y`
 4. Edit the MagicPath component to accept all the same props/callbacks
 5. Ensure every feature from the old component exists in the new one
 6. Swap the import in the parent — the parent code should barely change
@@ -155,13 +154,13 @@ If the user has a theme they want applied, or references a brand/design system b
 **Building a new page from a MagicPath design library**:
 1. Browse the project's components with `list-components`
 2. Plan the page layout first — identify which MagicPath components map to which sections
-3. Install needed components one at a time with `magicpath-ai add <generatedName> -y`
+3. Install needed components one at a time with `npx -y magicpath-ai@beta add <generatedName> -y`
 4. Build the page layout, importing each component
 5. Adapt each component: responsive sizing, real data, proper routing, state management
 6. Ensure consistent spacing, typography, and color usage across all components
 
 **Using a single MagicPath component as inspiration**:
-1. Inspect the source with `magicpath-ai inspect <generatedName> -o json`
+1. Inspect the source with `npx -y magicpath-ai@beta inspect <generatedName> -o json`
 2. Understand the design intent — colors, spacing, layout structure, typography
 3. Install and adapt it, or use it as a reference to build something custom that follows the same design language
 
@@ -194,11 +193,11 @@ Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles,
 
 ### Edit an existing component
 
-1. Run `magicpath-ai code context <componentId> --dir <workdir> -o json`. This writes the editable files and `magicpath-code.json` into `<workdir>`. By default, the CLI checks out the component's currently selected revision. To check out a specific revision instead, pass `--revision <revisionId>` — useful when the user is viewing or referring to a non-current revision (e.g. a value carried through from `magicpath-ai selection`).
+1. Run `npx -y magicpath-ai@beta code context <componentId> --dir <workdir> -o json`. This writes the editable files and `magicpath-code.json` into `<workdir>`. By default, the CLI checks out the component's currently selected revision. To check out a specific revision instead, pass `--revision <revisionId>` — useful when the user is viewing or referring to a non-current revision (e.g. a value carried through from `npx -y magicpath-ai@beta selection`).
 2. Edit, add, or delete allowed files inside `<workdir>` (see the boundary above). When you remove the last usage of a sub-component file, delete its source file too — don't leave orphan files in the revision. Renames are delete-plus-write.
-3. Run `magicpath-ai code submit --dir <workdir> --wait -o json`.
+3. Run `npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json`.
 4. If the job result is `failed`, read the returned sanitized diagnostics, fix only allowed files, and submit again. Do not create a new component to work around a build failure.
-5. If the submission reports a conflict or stale base, run `magicpath-ai code context <componentId> --dir <workdir> -o json` again to refresh the working directory before re-applying your edits.
+5. If the submission reports a conflict or stale base, run `npx -y magicpath-ai@beta code context <componentId> --dir <workdir> -o json` again to refresh the working directory before re-applying your edits.
 
 ### Create a new component
 
@@ -209,62 +208,62 @@ Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles,
 **The CLI scaffolds this structure for you on `code start`.** After `code start` returns, the working directory already contains a pre-wired `src/App.tsx` and a stub `src/components/generated/<ComponentName>.tsx`. The component filename matches the PascalCase form of `--name` (e.g. `--name "Hero Card"` → `HeroCard.tsx`). Your job is to fill in the stub — **do not rewrite `App.tsx`**, it's already correct. The only reasons to edit `App.tsx` are to change the `theme` (`'light'`/`'dark'`) or `container` (`'centered'`/`'none'`) values at the top.
 
 Steps:
-1. Run `magicpath-ai code start --project <projectId> --dir <workdir> --name "Component Name" -o json`. Creates the pending component, scaffolds the slim `App.tsx` + stub, and writes `magicpath-code.json`.
+1. Run `npx -y magicpath-ai@beta code start --project <projectId> --dir <workdir> --name "Component Name" -o json`. Creates the pending component, scaffolds the slim `App.tsx` + stub, and writes `magicpath-code.json`.
 2. Fill in `<workdir>/src/components/generated/<ComponentName>.tsx` with the component implementation. Split into additional files in the same directory if the component is substantial.
 3. Optionally edit `<workdir>/src/index.css` for custom styles.
-4. Run `magicpath-ai code submit --dir <workdir> --wait -o json`.
+4. Run `npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json`.
 5. If the build fails, fix the component files and re-run `code submit --wait`. Do not start a second component unless the user explicitly asks.
 
 > The `code create` command is a convenience that combines `start` and `submit` in one call. Prefer the explicit two-step flow — it makes your progress visible on the canvas while files are still being written, and it gives you the scaffolded starting point to work from.
 
 ### Polling a job separately
 
-If you need to check job status after the fact (for example, after submitting without `--wait`), use `magicpath-ai code status <jobId> -o json`. It returns one of `pending`, `processing`, `completed`, `failed`, or `cancelled`.
+If you need to check job status after the fact (for example, after submitting without `--wait`), use `npx -y magicpath-ai@beta code status <jobId> -o json`. It returns one of `pending`, `processing`, `completed`, `failed`, or `cancelled`.
 
 ## Quick Reference
 
 ```bash
 # Auth
-magicpath-ai login                    # one-click browser login
-magicpath-ai whoami -o json           # check auth status
-magicpath-ai info -o json             # full project context
+npx -y magicpath-ai@beta login                    # one-click browser login
+npx -y magicpath-ai@beta whoami -o json           # check auth status
+npx -y magicpath-ai@beta info -o json             # full project context
 
 # Teams and people
-magicpath-ai list-teams -o json                  # list teams you belong to
-magicpath-ai list-members --team "Acme" -o json  # list members of a team
+npx -y magicpath-ai@beta list-teams -o json                  # list teams you belong to
+npx -y magicpath-ai@beta list-members --team "Acme" -o json  # list members of a team
 
 # Find components (always use -o json)
-magicpath-ai search "input box" -o json          # search across all workspaces
-magicpath-ai search "button" --team "Acme" -o json   # search within a team
-magicpath-ai list-projects -o json               # list all projects (personal + team)
-magicpath-ai list-projects --team "Acme" -o json     # list only team projects
-magicpath-ai list-projects --personal -o json        # list only personal projects
-magicpath-ai list-components <id> -o json      # list components in a project
-magicpath-ai list-components <id> --created-by <userId> -o json  # filter by person
+npx -y magicpath-ai@beta search "input box" -o json          # search across all workspaces
+npx -y magicpath-ai@beta search "button" --team "Acme" -o json   # search within a team
+npx -y magicpath-ai@beta list-projects -o json               # list all projects (personal + team)
+npx -y magicpath-ai@beta list-projects --team "Acme" -o json     # list only team projects
+npx -y magicpath-ai@beta list-projects --personal -o json        # list only personal projects
+npx -y magicpath-ai@beta list-components <id> -o json      # list components in a project
+npx -y magicpath-ai@beta list-components <id> --created-by <userId> -o json  # filter by person
 
 # Inspect components
-magicpath-ai view <generatedName>              # preview in browser
-magicpath-ai inspect <generatedName> -o json   # show source code (no install)
-magicpath-ai add <generatedName> --dry-run     # show what would be installed
+npx -y magicpath-ai@beta view <generatedName>              # preview in browser
+npx -y magicpath-ai@beta inspect <generatedName> -o json   # show source code (no install)
+npx -y magicpath-ai@beta add <generatedName> --dry-run     # show what would be installed
 
 # Install and use components
-magicpath-ai add <generatedName> -y         # add to project (no prompts)
+npx -y magicpath-ai@beta add <generatedName> -y         # add to project (no prompts)
 
 # Themes (design systems)
-magicpath-ai list-themes -o json                 # list personal themes
-magicpath-ai list-themes --team "Acme" -o json   # list team themes
-magicpath-ai get-theme <id-or-name> -o json    # get theme CSS vars, fonts, prompt
+npx -y magicpath-ai@beta list-themes -o json                 # list personal themes
+npx -y magicpath-ai@beta list-themes --team "Acme" -o json   # list team themes
+npx -y magicpath-ai@beta get-theme <id-or-name> -o json    # get theme CSS vars, fonts, prompt
 
 # Current canvas context
-magicpath-ai selection -o json                 # get currently selected component(s)
-magicpath-ai active-project -o json            # get the project(s) the user has open
+npx -y magicpath-ai@beta selection -o json                 # get currently selected component(s)
+npx -y magicpath-ai@beta active-project -o json            # get the project(s) the user has open
 
 # Author/edit canvas components from code (external-agent)
-magicpath-ai code context <componentId> --dir <workdir> -o json                           # checkout for editing (uses component's currently selected revision)
-magicpath-ai code context <componentId> --revision <revisionId> --dir <workdir> -o json    # checkout a specific revision
-magicpath-ai code start --project <projectId> --dir <workdir> --name "Name" -o json       # start a new pending component
-magicpath-ai code submit --dir <workdir> --wait -o json                                   # submit edits + wait for build
-magicpath-ai code status <jobId> -o json                                                  # poll a build job
+npx -y magicpath-ai@beta code context <componentId> --dir <workdir> -o json                           # checkout for editing (uses component's currently selected revision)
+npx -y magicpath-ai@beta code context <componentId> --revision <revisionId> --dir <workdir> -o json    # checkout a specific revision
+npx -y magicpath-ai@beta code start --project <projectId> --dir <workdir> --name "Name" -o json       # start a new pending component
+npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json                                   # submit edits + wait for build
+npx -y magicpath-ai@beta code status <jobId> -o json                                                  # poll a build job
 ```
 
 ## Key Concepts
@@ -280,7 +279,7 @@ magicpath-ai code status <jobId> -o json                                        
 ## Current Project Context
 
 ```json
-!`magicpath-ai info --json 2>/dev/null || echo '{"error": "magicpath-ai not found. Install with: npm install -g magicpath-ai"}'`
+!`npx -y magicpath-ai@beta info -o json 2>/dev/null || echo '{"error": "Could not run magicpath-ai via npx. Ensure Node.js is installed and the registry is reachable."}'`
 ```
 
 The JSON above contains auth status, projects, and CLI version. If auth.authenticated is false, the user needs to log in before any other operations.
