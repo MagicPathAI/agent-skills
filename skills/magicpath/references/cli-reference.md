@@ -101,6 +101,25 @@ JSON output: `{ projects, pagination: { total, limit, offset, hasMore } }`. Each
 - `ownerType` (`"personal"` or `"team"`) and `ownerName` (user email or team name)
 - `createdBy` (object or null) — `{ id, displayName }` of the user who created this project
 
+### `create-project` — Create a new project
+
+```bash
+magicpath-ai create-project --name "My Stuff" -o json
+magicpath-ai create-project --name "My Stuff" --team "Acme Inc" -o json
+magicpath-ai create-project --team "Acme Inc" -o json   # auto-generated name
+```
+
+Creates a project in the user's personal workspace, or in a team if `--team` is passed. With `--team`, the user must be a member of that team.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--name <name>` | Project name | auto-generated placeholder |
+| `--team <nameOrId>` | Create the project in this team (name or ID) | personal |
+
+JSON output: `{ project }` — the same project shape returned by `list-projects` (includes `id`, `name`, `ownerType`, `ownerName`, `visibility`, etc.). Use `project.id` as the `--project` argument for `code start` to add the first component.
+
+Visibility is set automatically: personal projects default to `PRIVATE`, team projects default to `SHARED`.
+
 ### `list-components` — List components in a project
 
 ```bash

@@ -1,6 +1,6 @@
 ---
 name: magicpath
-description: Search, preview, inspect, and install MagicPath UI components with the magicpath-ai CLI. Use when the user mentions MagicPath, wants to browse or search MagicPath components, preview one, or add one to their project. Also use when the user refers to "designs" — in MagicPath, designs are created and stored as components. Also use when the user mentions themes or theming — MagicPath themes (design systems) contain CSS variables, fonts, and styling instructions. Also use when the user asks about MagicPath teams, members, or who worked on something — MagicPath supports teams with shared projects, team members, and attribution tracking.
+description: Search, preview, inspect, and install MagicPath UI components with the magicpath-ai CLI. Use when the user mentions MagicPath, wants to browse or search MagicPath components, preview one, or add one to their project. Also use when the user wants to create a new MagicPath project (workspace for designs/components), including projects inside a team. Also use when the user refers to "designs" — in MagicPath, designs are created and stored as components. Also use when the user mentions themes or theming — MagicPath themes (design systems) contain CSS variables, fonts, and styling instructions. Also use when the user asks about MagicPath teams, members, or who worked on something — MagicPath supports teams with shared projects, team members, and attribution tracking.
 compatibility: Requires Node.js (for npx), network access to MagicPath, and browser access for login or preview flows.
 metadata:
   author: MagicPathAI
@@ -175,6 +175,33 @@ If the user has a theme they want applied, or references a brand/design system b
 - **`add` is for React/TypeScript projects only.** The `add` command writes `.tsx` files to `src/components/magicpath/` and installs npm dependencies. Only use `add` in JavaScript/TypeScript projects. For non-JS projects (Swift, Python, etc.), use `inspect` to read the component source, then translate the design and behavior into the project's language and framework.
 - **Never run `view` commands in parallel.** The `view` command opens a browser window for the user. Only open one preview at a time.
 
+## Creating a project
+
+A **project** is the workspace that holds designs/components. Use this when the user explicitly asks to create a project ("make a new project called …", "create a project for …"), or when they ask for a new design but no project context exists yet and a fresh project is the right home for it.
+
+### Picking the workspace
+
+Before creating, decide whether the project is **personal** or belongs to a **team**:
+
+- If the user names a team ("create a project in Acme Inc"), resolve that team and pass it through.
+- If the user says "create a personal project" or doesn't mention a team and has no teams, default to personal.
+- If the user is ambiguous and belongs to one or more teams, run `npx -y magicpath-ai@beta list-teams -o json` and ask which workspace — personal or one of the teams. Don't guess. **STOP and wait for the user to reply.**
+
+### Running the command
+
+```bash
+npx -y magicpath-ai@beta create-project --name "My Stuff" -o json                       # personal
+npx -y magicpath-ai@beta create-project --name "My Stuff" --team "Acme Inc" -o json     # team
+```
+
+- `--name` is optional. If omitted, the project gets an auto-generated placeholder name. Always pass `--name` when the user told you what to call the project.
+- `--team` accepts a team name or team ID. Resolve the user's intent to one of the teams returned by `list-teams`.
+- JSON output: `{ project: { id, name, ownerType, ownerName, ... } }`. The `id` is what subsequent commands need.
+
+### After the project exists
+
+If the user also asked for a design inside the new project, take the `id` from the response and continue with the existing canvas-component creation flow described in the next section (`code start --project <id> --name "..."`, fill in the scaffolded files, `code submit --wait`). Do not re-create the project per design — one project holds many components.
+
 ## Edit or create canvas components from code
 
 Use this workflow when the user wants you to author or modify a MagicPath canvas component itself — not install an existing component into a separate application. The `code` subcommands operate on a working directory and a small manifest file (`magicpath-code.json`) that tracks which component and revision the directory belongs to.
@@ -231,6 +258,10 @@ npx -y magicpath-ai@beta info -o json             # full project context
 # Teams and people
 npx -y magicpath-ai@beta list-teams -o json                  # list teams you belong to
 npx -y magicpath-ai@beta list-members --team "Acme" -o json  # list members of a team
+
+# Create a new project
+npx -y magicpath-ai@beta create-project --name "My Stuff" -o json                    # personal
+npx -y magicpath-ai@beta create-project --name "My Stuff" --team "Acme" -o json      # team
 
 # Find components (always use -o json)
 npx -y magicpath-ai@beta search "input box" -o json          # search across all workspaces
