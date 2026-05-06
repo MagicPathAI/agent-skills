@@ -1,0 +1,20 @@
+{
+  "name": "magicpath",
+  "owner": {
+    "name": "MagicPath",
+    "email": "support@magicpath.ai"
+  },
+  "description": "MagicPath plugins for Claude Code",
+  "plugins": [
+    {
+      "name": "magicpath",
+      "source": "./",
+      "description": "Search, preview, inspect, and install MagicPath UI components, themes, and canvas designs.",
+      "homepage": "https://magicpath.ai",
+      "repository": "https://github.com/MagicPathAI/agent-skills",
+      "license": "MIT",
+      "category": "design",
+      "tags": ["magicpath", "ui", "components", "design"]
+    }
+  ]
+}
