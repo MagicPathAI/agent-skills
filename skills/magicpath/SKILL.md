@@ -109,6 +109,35 @@ If the user has a theme they want applied, or references a brand/design system b
 5. **Handle fonts** — if the theme includes `fonts`, ensure the project loads these fonts (Google Fonts link or `@font-face` declarations for custom fonts) and that components reference them via the theme's font CSS variables (e.g., `font-family: var(--font-body)`).
 6. **Non-React/JS projects** — theme data is a reference, not a stylesheet. Translate CSS variables into the target platform's equivalent: SwiftUI `Color` assets, Android theme XML, Python template context, etc. The `prompt` field and color/font values express platform-agnostic design intent — map them to native patterns rather than using CSS directly.
 
+### Create or Edit Canvas Components From Code
+
+Use this flow only when the user wants to author a MagicPath canvas component directly:
+
+```bash
+magicpath-ai code start --project <projectId> --dir . --name "Component Name" -o json
+magicpath-ai code start --component <componentId> --dir . -o json
+magicpath-ai code context <componentId> --dir . -o json  # read-only
+magicpath-ai code submit --dir . --wait -o json
+```
+
+`code start` is the only command that begins a stateful coding session. Use `--project` to create a new component, or `--component` to edit an existing one. It writes editable files, creates or reuses a pending revision on the canvas, and shows agent presence.
+
+`code context` is read-only. Use it only to inspect existing component source; it must not be used as the submit path.
+
+Edit only these surfaces: `src/App.tsx`, `src/index.css`, `src/components/generated/**`, and temporary image assets under `assets/**`.
+
+`src/App.tsx` is pre-wired to render the generated component. Only edit it to change theme or top-level container values.
+
+#### Tailwind v4 Rules
+
+The MagicPath template uses Tailwind v4. Style this way:
+
+- `src/index.css` must contain `@import 'tailwindcss';`, not `@tailwind base;`, `@tailwind components;`, or `@tailwind utilities;`.
+- Theme tokens (`bg-background`, `text-foreground`, `border-border`, `bg-primary`, etc.) are wired via the `@theme inline { ... }` block in `index.css`. Do not remove it.
+- The `:root` and `.dark` blocks define the actual token values. Do not remove them.
+- To add custom utility classes, append them to `index.css` instead of replacing existing content.
+- There is no `tailwind.config.js`. Configuration lives in `index.css` via Tailwind v4's `@theme` directive.
+
 ### Phase 3: Install and Adapt
 
 9. **Add to project** — use `npx -y magicpath-ai@beta add <generatedName> -y` to install component files. Always pass `-y` in non-interactive contexts. If this is a **non-React project** (Swift, Python, etc.), **do not run `add`** — use `npx -y magicpath-ai@beta inspect <generatedName> -o json` to read the source as a reference, then recreate the component in the target language and framework.
@@ -223,11 +252,11 @@ Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles,
 
 ### Edit an existing component
 
-1. Run `npx -y magicpath-ai@beta code context <componentId> --dir <workdir> -o json`. This writes the editable files and `magicpath-code.json` into `<workdir>`. By default, the CLI checks out the component's currently selected revision. To check out a specific revision instead, pass `--revision <revisionId>` — useful when the user is viewing or referring to a non-current revision (e.g. a value carried through from `npx -y magicpath-ai@beta selection`).
+1. Run `npx -y magicpath-ai@beta code start --component <componentId> --dir <workdir> -o json`. This creates or reuses a pending edit revision, shows agent presence on the canvas, writes the editable files, and writes `magicpath-code.json` into `<workdir>`. By default, the CLI starts from the component's currently selected revision. To start from a specific revision instead, pass `--revision <revisionId>` — useful when the user is viewing or referring to a non-current revision (e.g. a value carried through from `npx -y magicpath-ai@beta selection`).
 2. Edit, add, or delete allowed files inside `<workdir>` (see the boundary above). Put any new images under `<workdir>/assets/` and reference them from the generated component or CSS. When you remove the last usage of a sub-component file, delete its source file too — don't leave orphan files in the revision. Renames are delete-plus-write.
 3. Run `npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json`.
 4. If the job result is `failed`, read the returned sanitized diagnostics, fix only allowed files, and submit again. Do not create a new component to work around a build failure.
-5. If the submission reports a conflict or stale base, run `npx -y magicpath-ai@beta code context <componentId> --dir <workdir> -o json` again to refresh the working directory before re-applying your edits.
+5. If the submission reports a conflict or stale base, run `npx -y magicpath-ai@beta code start --component <componentId> --dir <workdir> -o json` again to refresh the stateful edit session before re-applying your edits.
 
 ### Create a new component
 
@@ -293,9 +322,10 @@ npx -y magicpath-ai@beta selection -o json                 # get currently selec
 npx -y magicpath-ai@beta active-project -o json            # get the project(s) the user has open
 
 # Author/edit canvas components from code (external-agent)
-npx -y magicpath-ai@beta code context <componentId> --dir <workdir> -o json                           # checkout for editing (uses component's currently selected revision)
-npx -y magicpath-ai@beta code context <componentId> --revision <revisionId> --dir <workdir> -o json    # checkout a specific revision
 npx -y magicpath-ai@beta code start --project <projectId> --dir <workdir> --name "Name" -o json       # start a new pending component
+npx -y magicpath-ai@beta code start --component <componentId> --dir <workdir> -o json                 # start editing an existing component
+npx -y magicpath-ai@beta code start --component <componentId> --revision <revisionId> --dir <workdir> -o json # start editing a specific revision
+npx -y magicpath-ai@beta code context <componentId> --dir <workdir> -o json                           # read-only source fetch; not for submit
 npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json                                   # submit edits + wait for build
 npx -y magicpath-ai@beta code status <jobId> -o json                                                  # poll a build job
 ```
@@ -308,7 +338,7 @@ npx -y magicpath-ai@beta code status <jobId> -o json                            
 - Use `inspect` to inspect source code without installing — don't use `add` just to read code
 - MagicPath components are React/TypeScript source code — use `add` in JS/TS projects, use `inspect` + translate for other languages
 - **Themes** (design systems) contain CSS variables (`light`/`dark` maps), optional `fonts`, and an optional `prompt` with styling instructions for agents. "Theme" and "design system" are interchangeable. Use `list-themes` to browse, `get-theme` to fetch the full definition
-- The `code` subcommands (`start`/`context`/`submit`/`create`/`status`) publish edits back to the MagicPath canvas. They are unrelated to `add`/`inspect`, which install reusable component source into an app.
+- The `code` subcommands are for canvas-component source workflows, not app installation. Use `code start` + `code submit` to publish edits back to the MagicPath canvas; `code context` is read-only inspection. They are unrelated to `add`/`inspect`, which install reusable component source into an app.
 
 ## Current Project Context
 

@@ -283,7 +283,9 @@ Notes:
 
 The `code` subcommands let an external agent author or edit a MagicPath canvas component's source files locally, then submit them back to the platform. This is unrelated to `add`/`inspect`, which install reusable component source into an application.
 
-All `code` subcommands operate against a working directory and persist state in `<dir>/magicpath-code.json` (written by `start`, `context`, and `create`; read by `submit`).
+`code start` is the stateful entrypoint for both create and edit. With `--project`, it creates a pending component revision and writes a scaffolded Component Forge app. With `--component`, it creates or reuses a pending edit revision and writes editable source files. `code context` is read-only and does not create a revision, canvas presence, or submit manifest. `code submit` uploads changed files and waits for the build when `--wait` is passed.
+
+All stateful `code` sessions operate against a working directory and persist state in `<dir>/magicpath-code.json` (written by `start`, `create`, and successful `submit`; read by `submit`).
 
 #### Editable file boundary
 
@@ -298,39 +300,52 @@ Image files in `<dir>/assets/` are staging inputs. The backend uploads them to s
 
 It does **not** accept dependency installation, `package.json` edits, `src/main.tsx`, Vite config changes, lockfile edits, raw patches, or arbitrary repo files.
 
-#### `code start` — Create a pending component before writing code
+#### Tailwind v4 requirements
+
+- Keep `@import 'tailwindcss';` in `src/index.css`.
+- Do not use `@tailwind base;`, `@tailwind components;`, or `@tailwind utilities;`.
+- Do not remove `@theme inline { ... }`, `:root`, or `.dark` token blocks.
+- Append custom utilities or theme additions to `src/index.css`; do not replace the whole file.
+- There is no `tailwind.config.js`; configuration lives in `src/index.css`.
+
+#### `code start` — Start a pending create or edit session before writing code
 
 ```bash
 magicpath-ai code start --project <projectId> --dir ./mp-new --name "Hero Card" -o json
+magicpath-ai code start --component <componentId> --dir ./mp-work -o json
 ```
 
-Creates a component and pending revision on the canvas immediately, enables external-agent canvas presence (Liveblocks cursor), and **scaffolds the starting file structure** into `<dir>`:
+For creates, creates a component and pending revision on the canvas immediately, enables external-agent canvas presence (Liveblocks cursor), and **scaffolds the starting file structure** into `<dir>`:
 
 - `magicpath-code.json` — manifest with component/revision IDs
 - `src/App.tsx` — pre-wired slim entry file that imports and renders the top-level component from `src/components/generated/<ComponentName>`
+- `src/index.css` — Component Forge Tailwind v4 setup with `@import 'tailwindcss';`, `@theme inline`, token definitions, base layer, and fallback image styles
 - `src/components/generated/<ComponentName>.tsx` — stub named-export component ready to fill in
 
 The component filename is derived from `--name` (PascalCase, e.g. `"Hero Card"` → `HeroCard`). JSON output includes `scaffoldedPaths` listing the files that were written.
 
-Run this before generating files for a new canvas component — do not write files first and `create` after.
+For edits, creates or reuses one pending edit revision for the component, enables external-agent canvas presence, writes the editable source files into `<dir>`, and writes `magicpath-code.json`. Run this before generating files for a new or existing canvas component.
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--project <projectId>` | Target MagicPath project ID (required) | — |
+| `--project <projectId>` | Target MagicPath project ID for create. Use exactly one of `--project` or `--component`. | — |
+| `--component <componentId>` | Existing MagicPath component ID for edit. Use exactly one of `--project` or `--component`. | — |
+| `--revision <revisionId>` | Revision to start editing. Defaults to the component's selected revision. | selected revision |
 | `--dir <dir>` | Working directory to initialize | `.` |
 | `--name <name>` | Component name | `External Agent Component` |
 
-#### `code context` — Checkout an existing component's editable files
+#### `code context` — Fetch existing component source read-only
 
 ```bash
 magicpath-ai code context <componentId> --dir ./mp-work -o json
 ```
 
-Writes `src/App.tsx`, `src/index.css`, `src/components/generated/**`, and `magicpath-code.json` into `<dir>`. Use this to edit an existing component.
+Writes `src/App.tsx`, `src/index.css`, and `src/components/generated/**` into `<dir>` for inspection only. It does **not** create a pending revision, does **not** show canvas presence, and does **not** write `magicpath-code.json`. Use `code start --component <componentId>` before submitting edits.
 
 | Flag | Description | Default |
 |------|-------------|---------|
 | `--dir <dir>` | Working directory to write into | `.` |
+| `--revision <revisionId>` | Revision to fetch. Defaults to the component's selected revision. | selected revision |
 
 #### `code submit` — Submit local edits
 
@@ -338,7 +353,7 @@ Writes `src/App.tsx`, `src/index.css`, `src/components/generated/**`, and `magic
 magicpath-ai code submit --dir ./mp-work --wait -o json
 ```
 
-Reads `magicpath-code.json`, computes both the set of changed editable files and any files that were removed from `<dir>` since the last `context`/`start`/successful `submit`, and submits them together (changes as full-file replacements, removals as `deletedPaths`). Prints the resulting job/revision. Use `--wait` when the agent should fix build failures in the same turn.
+Reads `magicpath-code.json`, computes both the set of changed editable files and any files that were removed from `<dir>` since the last `start`/successful `submit`, and submits them together (changes as full-file replacements, removals as `deletedPaths`). Prints the resulting job/revision. Use `--wait` when the agent should fix build failures in the same turn.
 
 | Flag | Description | Default |
 |------|-------------|---------|
