@@ -211,17 +211,20 @@ Use this workflow when the user wants you to author or modify a MagicPath canvas
 - `src/App.tsx`
 - `src/index.css`
 - `src/components/generated/**`
+- `assets/**` for temporary image assets only
 
 Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles, or any other file — they will be rejected.
 
-**Deleting and renaming files is supported in edit mode.** To delete an editable file, just remove it from `<workdir>` — `code submit` detects the deletion and propagates it. A rename is a delete + a write in the same submit. In create mode, there's nothing to delete; just don't write the file.
+**Image assets.** Put local image files in `<workdir>/assets/` and reference them from code or CSS, for example `../../../assets/hero.png`, `/assets/hero.png`, or `url("../../assets/hero.png")`. MagicPath uploads these temporary assets, rewrites references to stable public asset URLs, and removes the `assets/` staging folder before build. Do not inline `data:image/...;base64,...`; if you encounter base64 image data, move it into an asset file instead.
+
+**Deleting and renaming source files is supported in edit mode.** To delete an editable source file, just remove it from `<workdir>` — `code submit` detects the deletion and propagates it. A rename is a delete + a write in the same submit. Assets are temporary staging inputs and are not deleted from the server by removing local files. In create mode, there's nothing to delete; just don't write the file.
 
 **Do not use `add` or `inspect` for this workflow.** `add`/`inspect` are for installing reusable registry components into another app. `code ...` is for editing components on the user's MagicPath canvas — they are separate flows and must not be mixed.
 
 ### Edit an existing component
 
 1. Run `npx -y magicpath-ai@beta code context <componentId> --dir <workdir> -o json`. This writes the editable files and `magicpath-code.json` into `<workdir>`. By default, the CLI checks out the component's currently selected revision. To check out a specific revision instead, pass `--revision <revisionId>` — useful when the user is viewing or referring to a non-current revision (e.g. a value carried through from `npx -y magicpath-ai@beta selection`).
-2. Edit, add, or delete allowed files inside `<workdir>` (see the boundary above). When you remove the last usage of a sub-component file, delete its source file too — don't leave orphan files in the revision. Renames are delete-plus-write.
+2. Edit, add, or delete allowed files inside `<workdir>` (see the boundary above). Put any new images under `<workdir>/assets/` and reference them from the generated component or CSS. When you remove the last usage of a sub-component file, delete its source file too — don't leave orphan files in the revision. Renames are delete-plus-write.
 3. Run `npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json`.
 4. If the job result is `failed`, read the returned sanitized diagnostics, fix only allowed files, and submit again. Do not create a new component to work around a build failure.
 5. If the submission reports a conflict or stale base, run `npx -y magicpath-ai@beta code context <componentId> --dir <workdir> -o json` again to refresh the working directory before re-applying your edits.
@@ -237,7 +240,7 @@ Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles,
 Steps:
 1. Run `npx -y magicpath-ai@beta code start --project <projectId> --dir <workdir> --name "Component Name" -o json`. Creates the pending component, scaffolds the slim `App.tsx` + stub, and writes `magicpath-code.json`.
 2. Fill in `<workdir>/src/components/generated/<ComponentName>.tsx` with the component implementation. Split into additional files in the same directory if the component is substantial.
-3. Optionally edit `<workdir>/src/index.css` for custom styles.
+3. Optionally edit `<workdir>/src/index.css` for custom styles. Put image files in `<workdir>/assets/` and reference them from TSX or CSS instead of embedding base64.
 4. Run `npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json`.
 5. If the build fails, fix the component files and re-run `code submit --wait`. Do not start a second component unless the user explicitly asks.
 

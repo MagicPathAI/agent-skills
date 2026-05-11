@@ -292,6 +292,9 @@ The `code` API only accepts full-file replacements for:
 - `src/App.tsx`
 - `src/index.css`
 - `src/components/generated/**`
+- `assets/**` for temporary image assets only
+
+Image files in `<dir>/assets/` are staging inputs. The backend uploads them to stable public asset URLs, rewrites TSX/CSS references, and removes the staging folder before build. Reference assets from component code or CSS with paths such as `../../../assets/hero.png`, `/assets/hero.png`, or `url("../../assets/hero.png")`. Do not inline `data:image/...;base64,...` in source files.
 
 It does **not** accept dependency installation, `package.json` edits, `src/main.tsx`, Vite config changes, lockfile edits, raw patches, or arbitrary repo files.
 
