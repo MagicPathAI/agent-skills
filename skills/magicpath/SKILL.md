@@ -57,6 +57,35 @@ If the user has a theme they want applied, or references a brand/design system b
 5. **Handle fonts** — if the theme includes `fonts`, ensure the project loads these fonts (Google Fonts link or `@font-face` declarations for custom fonts) and that components reference them via the theme's font CSS variables (e.g., `font-family: var(--font-body)`).
 6. **Non-React/JS projects** — theme data is a reference, not a stylesheet. Translate CSS variables into the target platform's equivalent: SwiftUI `Color` assets, Android theme XML, Python template context, etc. The `prompt` field and color/font values express platform-agnostic design intent — map them to native patterns rather than using CSS directly.
 
+### Create or Edit Canvas Components From Code
+
+Use this flow only when the user wants to author a MagicPath canvas component directly:
+
+```bash
+magicpath-ai code start --project <projectId> --dir . --name "Component Name" -o json
+magicpath-ai code start --component <componentId> --dir . -o json
+magicpath-ai code context <componentId> --dir . -o json  # read-only
+magicpath-ai code submit --dir . --wait -o json
+```
+
+`code start` is the only command that begins a stateful coding session. Use `--project` to create a new component, or `--component` to edit an existing one. It writes editable files, creates or reuses a pending revision on the canvas, and shows agent presence.
+
+`code context` is read-only. Use it only to inspect existing component source; it must not be used as the submit path.
+
+Edit only these surfaces: `src/App.tsx`, `src/index.css`, `src/components/generated/**`, and temporary image assets under `assets/**`.
+
+`src/App.tsx` is pre-wired to render the generated component. Only edit it to change theme or top-level container values.
+
+#### Tailwind v4 Rules
+
+The MagicPath template uses Tailwind v4. Style this way:
+
+- `src/index.css` must contain `@import 'tailwindcss';`, not `@tailwind base;`, `@tailwind components;`, or `@tailwind utilities;`.
+- Theme tokens (`bg-background`, `text-foreground`, `border-border`, `bg-primary`, etc.) are wired via the `@theme inline { ... }` block in `index.css`. Do not remove it.
+- The `:root` and `.dark` blocks define the actual token values. Do not remove them.
+- To add custom utility classes, append them to `index.css` instead of replacing existing content.
+- There is no `tailwind.config.js`. Configuration lives in `index.css` via Tailwind v4's `@theme` directive.
+
 ### Phase 3: Install and Adapt
 
 7. **Add to project** — use `magicpath-ai add <generatedName> -y` to install component files. Always pass `-y` in non-interactive contexts. If this is a **non-React project** (Swift, Python, etc.), **do not run `add`** — use `magicpath-ai inspect <generatedName> -o json` to read the source as a reference, then recreate the component in the target language and framework.

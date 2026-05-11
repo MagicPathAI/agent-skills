@@ -173,3 +173,28 @@ Lists MagicPath components already installed in the current project by scanning 
 | `--path <path>` | `-p` | Custom components directory | src/components/magicpath |
 
 JSON output: `{ components: [{ name, folder, path, files, exportName, importStatement }], total, componentsPath }`
+
+### `code` — Create and edit canvas components from local code
+
+```bash
+magicpath-ai code start --project <projectId> --dir . --name "Component Name" -o json
+magicpath-ai code start --component <componentId> --dir . -o json
+magicpath-ai code context <componentId> --dir . -o json  # read-only
+magicpath-ai code submit --dir . --wait -o json
+magicpath-ai code status <jobId> -o json
+```
+
+`code start` is the stateful entrypoint for both create and edit. With `--project`, it creates a pending component revision and writes a scaffolded Component Forge app. With `--component`, it creates or reuses a pending edit revision and writes editable source files. `code context` is read-only and does not create a revision or canvas presence. `code submit` uploads changed files and waits for the build when `--wait` is passed. `src/App.tsx` is pre-wired to render the generated component; edit it only for theme or top-level container values.
+
+Editable paths:
+- `src/App.tsx`
+- `src/index.css`
+- `src/components/generated/**`
+- `assets/**` for temporary image assets that are uploaded and rewritten during submit
+
+Tailwind v4 requirements:
+- Keep `@import 'tailwindcss';` in `src/index.css`.
+- Do not use `@tailwind base;`, `@tailwind components;`, or `@tailwind utilities;`.
+- Do not remove `@theme inline { ... }`, `:root`, or `.dark` token blocks.
+- Append custom utilities or theme additions to `src/index.css`; do not replace the whole file.
+- There is no `tailwind.config.js`; configuration lives in `src/index.css`.
