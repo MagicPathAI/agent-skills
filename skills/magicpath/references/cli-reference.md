@@ -311,8 +311,8 @@ It does **not** accept dependency installation, `package.json` edits, `src/main.
 #### `code start` — Start a pending create or edit session before writing code
 
 ```bash
-magicpath-ai code start --project <projectId> --dir ./mp-new --name "Hero Card" -o json
-magicpath-ai code start --component <componentId> --dir ./mp-work -o json
+npx -y magicpath-ai@beta code start --project <projectId> --dir ./mp-new --name "Hero Card" -o json
+npx -y magicpath-ai@beta code start --component <componentId> --dir ./mp-work -o json
 ```
 
 For creates, creates a component and pending revision on the canvas immediately, enables external-agent canvas presence (Liveblocks cursor), and **scaffolds the starting file structure** into `<dir>`:
@@ -337,7 +337,7 @@ For edits, creates or reuses one pending edit revision for the component, enable
 #### `code context` — Fetch existing component source read-only
 
 ```bash
-magicpath-ai code context <componentId> --dir ./mp-work -o json
+npx -y magicpath-ai@beta code context <componentId> --dir ./mp-work -o json
 ```
 
 Writes `src/App.tsx`, `src/index.css`, and `src/components/generated/**` into `<dir>` for inspection only. It does **not** create a pending revision, does **not** show canvas presence, and does **not** write `magicpath-code.json`. Use `code start --component <componentId>` before submitting edits.
@@ -350,7 +350,7 @@ Writes `src/App.tsx`, `src/index.css`, and `src/components/generated/**` into `<
 #### `code submit` — Submit local edits
 
 ```bash
-magicpath-ai code submit --dir ./mp-work --wait -o json
+npx -y magicpath-ai@beta code submit --dir ./mp-work --wait -o json
 ```
 
 Reads `magicpath-code.json`, computes both the set of changed editable files and any files that were removed from `<dir>` since the last `start`/successful `submit`, and submits them together (changes as full-file replacements, removals as `deletedPaths`). Prints the resulting job/revision. Use `--wait` when the agent should fix build failures in the same turn.
@@ -368,7 +368,7 @@ If no editable files have changed and nothing has been deleted, returns `{ statu
 #### `code create` — Create a new component from already-written files (convenience)
 
 ```bash
-magicpath-ai code create --project <projectId> --dir ./mp-new --name "Hero Card" --wait -o json
+npx -y magicpath-ai@beta code create --project <projectId> --dir ./mp-new --name "Hero Card" --wait -o json
 ```
 
 Convenience wrapper: internally runs `code start` and then uploads the files from `<dir>`. **Prefer explicit `code start` followed by `code submit`** — the split gives better canvas feedback (the pending component is visible while the agent is still writing code). `<dir>` must include `src/App.tsx`.
@@ -383,7 +383,7 @@ Convenience wrapper: internally runs `code start` and then uploads the files fro
 #### `code status` — Poll an external-agent build job
 
 ```bash
-magicpath-ai code status <jobId> -o json
+npx -y magicpath-ai@beta code status <jobId> -o json
 ```
 
 Returns `pending`, `processing`, `completed`, `failed`, or `cancelled`. Failed jobs include sanitized build diagnostics when available.

@@ -13,7 +13,7 @@ user-invocable: true
 
 A platform for building, sharing, and installing UI components via AI. Components are added as source code to the user's project via the `magicpath-ai` CLI.
 
-MagicPath canvas components can also be created and edited directly from local code via the `npx -y magicpath-ai@beta code ...` subcommands — see [Edit or create canvas components from code](#edit-or-create-canvas-components-from-code). That path is strict: only `src/App.tsx`, `src/index.css`, and files under `src/components/generated/` in the code working directory are editable.
+MagicPath canvas components can also be created and edited directly from local code via the `npx -y magicpath-ai@beta code ...` subcommands — see [Edit or create canvas components from code](#edit-or-create-canvas-components-from-code). That path is strict: only `src/App.tsx`, `src/index.css`, files under `src/components/generated/`, and temporary image assets under `assets/` in the code working directory are editable.
 
 > **Terminology:** Users often refer to MagicPath components as "designs" — the two terms are interchangeable. When a user says "design," "my designs," or "that design," treat it as meaning a MagicPath component. Search, inspect, and install accordingly.
 >
@@ -114,10 +114,10 @@ If the user has a theme they want applied, or references a brand/design system b
 Use this flow only when the user wants to author a MagicPath canvas component directly:
 
 ```bash
-magicpath-ai code start --project <projectId> --dir . --name "Component Name" -o json
-magicpath-ai code start --component <componentId> --dir . -o json
-magicpath-ai code context <componentId> --dir . -o json  # read-only
-magicpath-ai code submit --dir . --wait -o json
+npx -y magicpath-ai@beta code start --project <projectId> --dir . --name "Component Name" -o json
+npx -y magicpath-ai@beta code start --component <componentId> --dir . -o json
+npx -y magicpath-ai@beta code context <componentId> --dir . -o json  # read-only
+npx -y magicpath-ai@beta code submit --dir . --wait -o json
 ```
 
 `code start` is the only command that begins a stateful coding session. Use `--project` to create a new component, or `--component` to edit an existing one. It writes editable files, creates or reuses a pending revision on the canvas, and shows agent presence.
