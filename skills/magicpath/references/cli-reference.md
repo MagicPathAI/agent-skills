@@ -311,7 +311,7 @@ It does **not** accept dependency installation, `package.json` edits, `src/main.
 #### `code start` — Start a pending create or edit session before writing code
 
 ```bash
-npx -y magicpath-ai@beta code start --project <projectId> --dir ./mp-new --name "Hero Card" -o json
+npx -y magicpath-ai@beta code start --project <projectId> --dir ./mp-new --name "Hero Card" --width 960 --height 640 -o json
 npx -y magicpath-ai@beta code start --component <componentId> --dir ./mp-work -o json
 ```
 
@@ -333,6 +333,8 @@ For edits, creates or reuses one pending edit revision for the component, enable
 | `--revision <revisionId>` | Revision to start editing. Defaults to the component's selected revision. | selected revision |
 | `--dir <dir>` | Working directory to initialize | `.` |
 | `--name <name>` | Component name | `External Agent Component` |
+| `--width <px>` | Canvas width for new components. Use with `--height`; only valid with `--project`. | default placement width |
+| `--height <px>` | Canvas height for new components. Use with `--width`; only valid with `--project`. | default placement height |
 
 #### `code context` — Fetch existing component source read-only
 
@@ -350,7 +352,7 @@ Writes `src/App.tsx`, `src/index.css`, and `src/components/generated/**` into `<
 #### `code submit` — Submit local edits
 
 ```bash
-npx -y magicpath-ai@beta code submit --dir ./mp-work --wait -o json
+npx -y magicpath-ai@beta code submit --dir ./mp-work --width 960 --height 640 --wait -o json
 ```
 
 Reads `magicpath-code.json`, computes both the set of changed editable files and any files that were removed from `<dir>` since the last `start`/successful `submit`, and submits them together (changes as full-file replacements, removals as `deletedPaths`). Prints the resulting job/revision. Use `--wait` when the agent should fix build failures in the same turn.
@@ -360,10 +362,12 @@ Reads `magicpath-code.json`, computes both the set of changed editable files and
 | `--dir <dir>` | Working directory containing `magicpath-code.json` | `.` |
 | `--wait` | Wait for the build job to finish | false |
 | `--interval <ms>` | Polling interval when `--wait` is set | `2000` |
+| `--width <px>` | Updated canvas width. Use with `--height`. | unchanged |
+| `--height <px>` | Updated canvas height. Use with `--width`. | unchanged |
 
 To delete a file, just remove it from `<dir>` before running `submit` — the deletion is inferred from the manifest baseline. Deletion propagation is active only in edit mode; in create mode, simply don't write the file. The JSON output includes `deletedPaths: [...]` listing what was removed.
 
-If no editable files have changed and nothing has been deleted, returns `{ status: "unchanged", componentId, revisionId }` without submitting.
+If no editable files have changed, nothing has been deleted, and no dimensions were provided, returns `{ status: "unchanged", componentId, revisionId }` without submitting.
 
 #### `code create` — Create a new component from already-written files (convenience)
 
@@ -379,6 +383,8 @@ Convenience wrapper: internally runs `code start` and then uploads the files fro
 | `--dir <dir>` | Working directory containing `src/App.tsx` | `.` |
 | `--name <name>` | Component name | `External Agent Component` |
 | `--wait` | Wait for the build job to finish | false |
+| `--width <px>` | Canvas width for the new component. Use with `--height`. | default placement width |
+| `--height <px>` | Canvas height for the new component. Use with `--width`. | default placement height |
 
 #### `code status` — Poll an external-agent build job
 

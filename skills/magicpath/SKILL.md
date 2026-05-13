@@ -254,7 +254,7 @@ Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles,
 
 1. Run `npx -y magicpath-ai@beta code start --component <componentId> --dir <workdir> -o json`. This creates or reuses a pending edit revision, shows agent presence on the canvas, writes the editable files, and writes `magicpath-code.json` into `<workdir>`. By default, the CLI starts from the component's currently selected revision. To start from a specific revision instead, pass `--revision <revisionId>` — useful when the user is viewing or referring to a non-current revision (e.g. a value carried through from `npx -y magicpath-ai@beta selection`).
 2. Edit, add, or delete allowed files inside `<workdir>` (see the boundary above). Put any new images under `<workdir>/assets/` and reference them from the generated component or CSS. When you remove the last usage of a sub-component file, delete its source file too — don't leave orphan files in the revision. Renames are delete-plus-write.
-3. Run `npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json`.
+3. Run `npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json`. If your edit changes the intended canvas size, pass both `--width <px>` and `--height <px>` on submit.
 4. If the job result is `failed`, read the returned sanitized diagnostics, fix only allowed files, and submit again. Do not create a new component to work around a build failure.
 5. If the submission reports a conflict or stale base, run `npx -y magicpath-ai@beta code start --component <componentId> --dir <workdir> -o json` again to refresh the stateful edit session before re-applying your edits.
 
@@ -267,10 +267,10 @@ Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles,
 **The CLI scaffolds this structure for you on `code start`.** After `code start` returns, the working directory already contains a pre-wired `src/App.tsx` and a stub `src/components/generated/<ComponentName>.tsx`. The component filename matches the PascalCase form of `--name` (e.g. `--name "Hero Card"` → `HeroCard.tsx`). Your job is to fill in the stub — **do not rewrite `App.tsx`**, it's already correct. The only reasons to edit `App.tsx` are to change the `theme` (`'light'`/`'dark'`) or `container` (`'centered'`/`'none'`) values at the top.
 
 Steps:
-1. Run `npx -y magicpath-ai@beta code start --project <projectId> --dir <workdir> --name "Component Name" -o json`. Creates the pending component, scaffolds the slim `App.tsx` + stub, and writes `magicpath-code.json`.
+1. Run `npx -y magicpath-ai@beta code start --project <projectId> --dir <workdir> --name "Component Name" --width <px> --height <px> -o json`. Choose dimensions that fit the component you plan to build instead of relying on the default canvas size. Creates the pending component, scaffolds the slim `App.tsx` + stub, and writes `magicpath-code.json`.
 2. Fill in `<workdir>/src/components/generated/<ComponentName>.tsx` with the component implementation. Split into additional files in the same directory if the component is substantial.
 3. Optionally edit `<workdir>/src/index.css` for custom styles. Put image files in `<workdir>/assets/` and reference them from TSX or CSS instead of embedding base64.
-4. Run `npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json`.
+4. Run `npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json`. If the final implementation needs a different canvas size than you chose at start, pass both `--width <px>` and `--height <px>` here.
 5. If the build fails, fix the component files and re-run `code submit --wait`. Do not start a second component unless the user explicitly asks.
 
 > The `code create` command is a convenience that combines `start` and `submit` in one call. Prefer the explicit two-step flow — it makes your progress visible on the canvas while files are still being written, and it gives you the scaffolded starting point to work from.
@@ -322,11 +322,11 @@ npx -y magicpath-ai@beta selection -o json                 # get currently selec
 npx -y magicpath-ai@beta active-project -o json            # get the project(s) the user has open
 
 # Author/edit canvas components from code (external-agent)
-npx -y magicpath-ai@beta code start --project <projectId> --dir <workdir> --name "Name" -o json       # start a new pending component
+npx -y magicpath-ai@beta code start --project <projectId> --dir <workdir> --name "Name" --width <px> --height <px> -o json # start a new pending component with chosen canvas size
 npx -y magicpath-ai@beta code start --component <componentId> --dir <workdir> -o json                 # start editing an existing component
 npx -y magicpath-ai@beta code start --component <componentId> --revision <revisionId> --dir <workdir> -o json # start editing a specific revision
 npx -y magicpath-ai@beta code context <componentId> --dir <workdir> -o json                           # read-only source fetch; not for submit
-npx -y magicpath-ai@beta code submit --dir <workdir> --wait -o json                                   # submit edits + wait for build
+npx -y magicpath-ai@beta code submit --dir <workdir> --width <px> --height <px> --wait -o json         # submit edits/size + wait for build
 npx -y magicpath-ai@beta code status <jobId> -o json                                                  # poll a build job
 ```
 
