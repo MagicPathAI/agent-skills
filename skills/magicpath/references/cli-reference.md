@@ -254,13 +254,13 @@ magicpath-ai selection
 magicpath-ai selection -o json
 ```
 
-Returns the component(s) currently selected in the MagicPath web app canvas, along with the project(s) the user has open. Returns empty `components` if the user has nothing selected, and empty `projects` if no canvas is open.
+Returns the component(s) and image(s) currently selected in the MagicPath web app canvas, along with the project(s) the user has open. Returns empty `components`/`images` if the user has nothing of that type selected, and empty `projects` if no canvas is open.
 
-JSON output: `{ projects: [{ id, name, ownerType, ownerName }], components: [{ id, name, generatedName, clientId, projectId, projectName }] }`
+JSON output: `{ projects: [{ id, name, ownerType, ownerName }], components: [{ id, name, generatedName, clientId, projectId, projectName }], images: [{ id, shapeId, name, projectId, projectName, width, height }] }`
 
 Notes:
 - `projects` is the same shape returned by `active-project` — calling `selection` gives you both signals in one round-trip.
-- `components` may be empty while `projects` is non-empty (project open, nothing selected). Use that to decide whether to fall back to listing or searching components.
+- `components` may be empty while `images` or `projects` are non-empty. Use that to decide whether to start a code session with selected image context, or fall back to listing/searching components.
 - If only the open project is needed (not the selection), prefer `active-project` — it is faster than `selection`.
 
 ### `active-project` — Get the project(s) the user currently has open
@@ -298,6 +298,8 @@ The `code` API only accepts full-file replacements for:
 
 Image files in `<dir>/assets/` are staging inputs. The backend uploads them to stable public asset URLs, rewrites TSX/CSS references, and removes the staging folder before build. Reference assets from component code or CSS with paths such as `../../../assets/hero.png`, `/assets/hero.png`, or `url("../../assets/hero.png")`. Do not inline `data:image/...;base64,...` in source files.
 
+When image shapes are selected on the canvas before `code start`, JSON output may include `selectedImages`. Each selected image has a short-lived `accessUrl` plus a local `assetPath`; the CLI downloads the URL into that `assets/selected/**` path. Use the local `assetPath` in source, not the expiring `accessUrl`.
+
 It does **not** accept dependency installation, `package.json` edits, `src/main.tsx`, Vite config changes, lockfile edits, raw patches, or arbitrary repo files.
 
 #### Tailwind v4 requirements
@@ -325,6 +327,8 @@ For creates, creates a component and pending revision on the canvas immediately,
 The component filename is derived from `--name` (PascalCase, e.g. `"Hero Card"` → `HeroCard`). JSON output includes `scaffoldedPaths` listing the files that were written.
 
 For edits, creates or reuses one pending edit revision for the component, enables external-agent canvas presence, writes the editable source files into `<dir>`, and writes `magicpath-code.json`. Run this before generating files for a new or existing canvas component.
+
+If selected canvas images were available, `code start` also writes them into `<dir>/assets/selected/` and includes `selectedImages` in the JSON result and manifest. Those files are normal temporary assets and will be uploaded/referenced durably on `code submit`.
 
 | Flag | Description | Default |
 |------|-------------|---------|
