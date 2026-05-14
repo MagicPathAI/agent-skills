@@ -1,6 +1,6 @@
 {
   "name": "magicpath",
-  "description": "Search, preview, inspect, and install MagicPath UI components from Claude Code via the magicpath-ai CLI. Supports MagicPath design system themes.",
+  "description": "Search, preview, inspect, and install MagicPath UI components, themes, and canvas designs from Claude Code via the magicpath-ai CLI.",
   "version": "1.0.0",
   "author": {
     "name": "MagicPath",
