@@ -193,6 +193,15 @@ magicpath-ai view-component <generatedName>    # alias
 
 Opens the component preview URL in the default browser. In JSON mode, returns the URL without opening.
 
+### `share` — Get a shareable preview URL
+
+```bash
+magicpath-ai share <generatedName>
+magicpath-ai share <generatedName> -o json
+```
+
+Prints the component's preview URL to stdout (one line). Doesn't open a browser — use `view` if you want that. JSON output returns `{ url, generatedName }`. Same identifier expectations as `view`: pass the `generatedName` from `search`, `list-components`, `selection`, or the `code` flow.
+
 ### `inspect` — View component source code
 
 ```bash

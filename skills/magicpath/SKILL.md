@@ -308,6 +308,7 @@ npx -y magicpath-ai list-components <id> --created-by <userId> -o json  # filter
 
 # Inspect components
 npx -y magicpath-ai view <generatedName>              # preview in browser
+npx -y magicpath-ai share <generatedName> -o json     # print a shareable URL for a component (no browser open)
 npx -y magicpath-ai inspect <generatedName> -o json   # show source code (no install)
 npx -y magicpath-ai add <generatedName> --dry-run     # show what would be installed
 
