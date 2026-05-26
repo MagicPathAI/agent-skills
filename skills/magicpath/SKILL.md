@@ -124,7 +124,7 @@ npx -y magicpath-ai code submit --dir . --wait -o json
 
 Edit only these surfaces: `src/App.tsx`, `src/index.css`, `src/components/generated/**`, and temporary image assets under `assets/**`.
 
-`src/App.tsx` is pre-wired to render the generated component. Only edit it to change theme or top-level container values.
+`src/App.tsx` is pre-wired to render the generated component. Only edit it to change the top-level theme value.
 
 If image shapes are selected on the canvas when you run `code start`, the JSON response may include `selectedImages`. The CLI downloads those short-lived image URLs into `assets/selected/**`. Use the local `assetPath` from the response in TSX/CSS, and never paste the temporary `accessUrl` into component source because it expires.
 
@@ -229,7 +229,39 @@ npx -y magicpath-ai create-project --name "My Stuff" --team "Acme Inc" -o json  
 
 ### After the project exists
 
-If the user also asked for a design inside the new project, take the `id` from the response and continue with the existing canvas-component creation flow described in the next section (`code start --project <id> --name "..."`, fill in the scaffolded files, `code submit --wait`). Do not re-create the project per design — one project holds many components.
+If the user also asked for a design inside the new project, take the `id` from the response and continue with the canvas-component creation flow described under [Edit or create canvas components from code](#edit-or-create-canvas-components-from-code) (`code start --project <id> --name "..."`, fill in the scaffolded files, `code submit --wait`). Do not re-create the project per design — one project holds many components.
+
+## SUPER IMPORTANT — Design Defaults
+
+These rules apply to every canvas component you create or edit unless the user **explicitly** overrides them in the request. They override anything else in this skill.
+
+### 1. NEVER add device mockups
+
+Do NOT wrap components in iPhone / Android / laptop / desktop / browser frames, status bars, notches, home indicators, address bars, or any other device chrome. Only add a device mockup if the user **explicitly** asks for one ("show this inside a phone frame", "wrap it in an iPhone mockup", "make it look like a Mac window"). Designing for a mobile viewport is **not** a request for a mockup — the canvas itself is the device frame. Never draw a second device inside it.
+
+### 2. Everything is responsive — always
+
+Every component must work at any width, including small primitives like buttons, inputs, badges, and cards. Use `w-full`, `max-w-*`, percentage widths, flex/grid sizing, and breakpoint utilities (`sm:`, `md:`, `lg:`). Do not hardcode pixel widths/heights on outer containers. The only exceptions are intrinsically fixed elements (avatars, icons, fixed-size media).
+
+### 3. Always centered inside the canvas
+
+The root of the component should center itself in its frame — horizontally, and vertically when the design is short. Use `min-h-screen flex items-center justify-center`, `mx-auto`, or grid centering on the root. The design must never stick to a corner when the canvas is larger than the content, and must never overflow when it's smaller.
+
+### 4. Canvas size ≠ device mockup
+
+You may (and should) pass `--width`/`--height` to `code start` / `code submit` to reflect the target device — e.g. `--width 390 --height 844` for a mobile design, `--width 1440 --height 900` for desktop. That's how you signal "this is a mobile design." But the content inside must remain fluid: if the same component is dropped into a wider or narrower container later, it should adapt — not stay locked to the original pixel size.
+
+### 5. NEVER stack multiple screens inside one frame
+
+A MagicPath component is **one** frame. Do not draw "Screen 1 / Screen 2 / Screen 3" side-by-side, vertically stacked, or as a slideshow inside a single canvas. That output is broken — it doesn't render, it doesn't navigate, and it wastes the user's canvas.
+
+When the user wants something that spans multiple views, pick one of these two patterns and **stick to it**:
+
+**A. Self-contained app in ONE frame (preferred when the views belong to the same flow).** A single component can hold many views, screens, modals, tabs, steps, or routes by using React state, conditional rendering, tab components, client-side routing, or `useState`-driven view switching. A login → signup → forgot-password flow, a multi-step wizard, a settings page with tab navigation, a dashboard with a slide-out detail panel — all of these belong in **one** component with internal state, not several frames glued together.
+
+**B. Multiple frames (one component per screen) when the screens are truly independent.** If the user is asking for distinct deliverables — "design the login screen, the dashboard, and the settings page" — each one is its own MagicPath component. Create them as separate `code start --name "..."` sessions, **each with its own `--dir`** (parallel sessions that share a working directory will overwrite each other's `magicpath-code.json`). Build them concurrently — if your environment supports parallel sub-agents, spawn one per frame; otherwise run the sessions in parallel however your runner allows. Do not try to render them all in a single canvas to "save time" — it produces a broken artifact.
+
+If you're unsure which pattern fits, ask the user: "Should this be one interactive component with internal navigation, or separate frames for each screen?" — and **stop and wait** for the answer.
 
 ## Edit or create canvas components from code
 
@@ -266,7 +298,7 @@ Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles,
 
 **Expected file structure.** A MagicPath component has a slim `src/App.tsx` that imports and renders a top-level component from `src/components/generated/`. The actual implementation lives in `src/components/generated/<ComponentName>.tsx` (PascalCase filename, named export). Larger components should be split into additional sibling files under `src/components/generated/`, each importing what it needs. This is how every existing MagicPath component is structured — compare against what `code context` returns for any existing component.
 
-**The CLI scaffolds this structure for you on `code start`.** After `code start` returns, the working directory already contains a pre-wired `src/App.tsx` and a stub `src/components/generated/<ComponentName>.tsx`. The component filename matches the PascalCase form of `--name` (e.g. `--name "Hero Card"` → `HeroCard.tsx`). Your job is to fill in the stub — **do not rewrite `App.tsx`**, it's already correct. The only reasons to edit `App.tsx` are to change the `theme` (`'light'`/`'dark'`) or `container` (`'centered'`/`'none'`) values at the top.
+**The CLI scaffolds this structure for you on `code start`.** After `code start` returns, the working directory already contains a pre-wired `src/App.tsx` and a stub `src/components/generated/<ComponentName>.tsx`. The component filename matches the PascalCase form of `--name` (e.g. `--name "Hero Card"` → `HeroCard.tsx`). Your job is to fill in the stub — **do not rewrite `App.tsx`**, it's already correct. The only reason to edit `App.tsx` is to change the `theme` (`'light'`/`'dark'`) value at the top.
 
 Steps:
 1. Run `npx -y magicpath-ai code start --project <projectId> --dir <workdir> --name "Component Name" --width <px> --height <px> -o json`. Choose dimensions that fit the component you plan to build instead of relying on the default canvas size. Creates the pending component, scaffolds the slim `App.tsx` + stub, and writes `magicpath-code.json`.
