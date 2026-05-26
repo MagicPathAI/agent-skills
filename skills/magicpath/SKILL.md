@@ -231,27 +231,33 @@ npx -y magicpath-ai create-project --name "My Stuff" --team "Acme Inc" -o json  
 
 If the user also asked for a design inside the new project, take the `id` from the response and continue with the canvas-component creation flow described under [Edit or create canvas components from code](#edit-or-create-canvas-components-from-code) (`code start --project <id> --name "..."`, fill in the scaffolded files, `code submit --wait`). Do not re-create the project per design — one project holds many components.
 
-## SUPER IMPORTANT — Design Defaults
+## Edit or create canvas components from code
 
-These rules apply to every canvas component you create or edit unless the user **explicitly** overrides them in the request. They override anything else in this skill.
+Use this workflow when the user wants you to author or modify a MagicPath canvas component itself — not install an existing component into a separate application. The `code` subcommands operate on a working directory and a small manifest file (`magicpath-code.json`) that tracks which component and revision the directory belongs to.
 
-### 1. NEVER add device mockups
+> **When authoring on the MagicPath canvas, you are an expert design engineer who builds beautiful, *functional, interactive* React components.** Components you produce on the canvas (via `code start` / `code submit`) should be real working mini-apps, not static design comps: state-driven, hover / focus / active states wired up, buttons that do something, forms that validate, transitions that feel deliberate. A pretty but lifeless component is a failed component. (This persona applies only to the `code` flow — when you're installing components into a user's project with `add`/`inspect`, follow the [Design-to-Production Mindset](#design-to-production-mindset) instead.)
+
+### SUPER IMPORTANT — Design Defaults
+
+These rules apply to every canvas component you create or edit with the `code` subcommands, unless the user **explicitly** overrides them in the request. They do **not** apply to the `add`/`inspect` install flow — for that, see the [Design-to-Production Mindset](#design-to-production-mindset). These rules override anything else in this skill for canvas authoring.
+
+#### 1. NEVER add device mockups
 
 Do NOT wrap components in iPhone / Android / laptop / desktop / browser frames, status bars, notches, home indicators, address bars, or any other device chrome. Only add a device mockup if the user **explicitly** asks for one ("show this inside a phone frame", "wrap it in an iPhone mockup", "make it look like a Mac window"). Designing for a mobile viewport is **not** a request for a mockup — the canvas itself is the device frame. Never draw a second device inside it.
 
-### 2. Everything is responsive — always
+#### 2. Everything is responsive — always
 
 Every component must work at any width, including small primitives like buttons, inputs, badges, and cards. Use `w-full`, `max-w-*`, percentage widths, flex/grid sizing, and breakpoint utilities (`sm:`, `md:`, `lg:`). Do not hardcode pixel widths/heights on outer containers. The only exceptions are intrinsically fixed elements (avatars, icons, fixed-size media).
 
-### 3. Always centered inside the canvas
+#### 3. Always centered inside the canvas
 
 The root of the component should center itself in its frame — horizontally, and vertically when the design is short. Use `min-h-screen flex items-center justify-center`, `mx-auto`, or grid centering on the root. The design must never stick to a corner when the canvas is larger than the content, and must never overflow when it's smaller.
 
-### 4. Canvas size ≠ device mockup
+#### 4. Canvas size ≠ device mockup
 
 You may (and should) pass `--width`/`--height` to `code start` / `code submit` to reflect the target device — e.g. `--width 390 --height 844` for a mobile design, `--width 1440 --height 900` for desktop. That's how you signal "this is a mobile design." But the content inside must remain fluid: if the same component is dropped into a wider or narrower container later, it should adapt — not stay locked to the original pixel size.
 
-### 5. NEVER stack multiple screens inside one frame
+#### 5. NEVER stack multiple screens inside one frame
 
 A MagicPath component is **one** frame. Do not draw "Screen 1 / Screen 2 / Screen 3" side-by-side, vertically stacked, or as a slideshow inside a single canvas. That output is broken — it doesn't render, it doesn't navigate, and it wastes the user's canvas.
 
@@ -263,9 +269,9 @@ When the user wants something that spans multiple views, pick one of these two p
 
 If you're unsure which pattern fits, ask the user: "Should this be one interactive component with internal navigation, or separate frames for each screen?" — and **stop and wait** for the answer.
 
-## Edit or create canvas components from code
+#### 6. Build interactive components, not static markup
 
-Use this workflow when the user wants you to author or modify a MagicPath canvas component itself — not install an existing component into a separate application. The `code` subcommands operate on a working directory and a small manifest file (`magicpath-code.json`) that tracks which component and revision the directory belongs to.
+You are an engineer, not a screenshot generator. Every canvas component must be **fully interactive** — buttons trigger real actions, inputs are controlled, forms submit and validate, hover / focus / active / disabled states are styled, modals open and close, tabs switch, drawers slide, dropdowns expand, toggles flip, accordions collapse. Use `useState` / `useReducer` for local state, real event handlers (`onClick`, `onChange`, `onSubmit`, `onKeyDown`, `onBlur`), `aria-*` attributes for accessibility, and meaningful transitions (Tailwind `transition-*`, Framer Motion, or CSS animations) where they add polish. A component left with placeholder `onClick={() => {}}` or static markup of an interactive surface is **not done** — wire it up before `code submit`. If the component represents a multi-view flow, make the navigation between views work via state (see rule 5.A).
 
 **Editable file boundary.** The `code` API only accepts full-file replacements for:
 
@@ -301,7 +307,7 @@ Never edit or submit `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles,
 **The CLI scaffolds this structure for you on `code start`.** After `code start` returns, the working directory already contains a pre-wired `src/App.tsx` and a stub `src/components/generated/<ComponentName>.tsx`. The component filename matches the PascalCase form of `--name` (e.g. `--name "Hero Card"` → `HeroCard.tsx`). Your job is to fill in the stub — **do not rewrite `App.tsx`**, it's already correct. The only reason to edit `App.tsx` is to change the `theme` (`'light'`/`'dark'`) value at the top.
 
 Steps:
-1. Run `npx -y magicpath-ai code start --project <projectId> --dir <workdir> --name "Component Name" --width <px> --height <px> -o json`. Choose dimensions that fit the component you plan to build instead of relying on the default canvas size. Creates the pending component, scaffolds the slim `App.tsx` + stub, and writes `magicpath-code.json`.
+1. Run `npx -y magicpath-ai code start --project <projectId> --dir <workdir> --name "Component Name" --width <px> --height <px> -o json`. Choose dimensions that fit the component you plan to build instead of relying on the default canvas size. Creates the pending component, scaffolds the slim `App.tsx` + stub, and writes `magicpath-code.json`. **Reminder:** the component must be responsive, centered, free of device mockups, a **single screen** (use internal state for multi-view flows, or parallel `code start` sessions for separate screens), and **fully interactive** (real handlers, controlled inputs, state-driven views, hover/focus/active states). See the [Design Defaults](#super-important--design-defaults) above.
 2. Fill in `<workdir>/src/components/generated/<ComponentName>.tsx` with the component implementation. Split into additional files in the same directory if the component is substantial.
 3. Optionally edit `<workdir>/src/index.css` for custom styles. Put image files in `<workdir>/assets/` and reference them from TSX or CSS instead of embedding base64.
 4. Run `npx -y magicpath-ai code submit --dir <workdir> --wait -o json`. If the final implementation needs a different canvas size than you chose at start, pass both `--width <px>` and `--height <px>` here.
