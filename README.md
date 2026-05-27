@@ -1,6 +1,6 @@
 # MagicPath Agent Skills
 
-Agent Skills for MagicPath, packaged for the open Agent Skills ecosystem and installable with Vercel's `skills` CLI or as a Claude Code plugin.
+Agent Skills for MagicPath, packaged for the open Agent Skills ecosystem and installable with Vercel's `skills` CLI or as a Claude Code or Codex plugin.
 
 ## Install in Claude Code
 
@@ -12,6 +12,15 @@ In Claude Code, add this repo as a marketplace and install the plugin:
 ```
 
 Once the plugin is accepted into the official Anthropic plugin marketplace, it will also be discoverable from the built-in `/plugin` browser without adding the marketplace manually.
+
+## Install in Codex
+
+In Codex (CLI, app, or VS Code extension), add this repo as a marketplace and install the plugin:
+
+```text
+codex plugin marketplace add MagicPathAI/agent-skills
+codex plugin install magicpath
+```
 
 ## Install via the Agent Skills CLI
 

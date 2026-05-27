@@ -1,6 +1,6 @@
 {
   "name": "magicpath",
-  "description": "Search, preview, inspect, and install MagicPath UI components, themes, and canvas designs from Claude Code via the magicpath-ai CLI.",
+  "description": "Search, preview, install, and author MagicPath UI components (designs) from Claude Code via the magicpath-ai CLI. Create new MagicPath projects, edit canvas components directly from local code, apply design-system themes, and work across personal and team workspaces.",
   "version": "1.0.0",
   "author": {
     "name": "MagicPath",
@@ -9,5 +9,5 @@
   "homepage": "https://magicpath.ai",
   "repository": "https://github.com/MagicPathAI/agent-skills",
   "license": "MIT",
-  "keywords": ["magicpath", "ui", "components", "design", "react"]
+  "keywords": ["magicpath", "ui", "components", "design"]
 }
