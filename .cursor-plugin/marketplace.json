@@ -1,0 +1,17 @@
+{
+  "name": "magicpath",
+  "owner": {
+    "name": "MagicPath",
+    "email": "support@magicpath.ai"
+  },
+  "metadata": {
+    "description": "MagicPath plugins for building and shipping UI from a multiplayer canvas connected to your code."
+  },
+  "plugins": [
+    {
+      "name": "magicpath",
+      "source": ".",
+      "description": "Give Cursor a multiplayer canvas for your code with MagicPath."
+    }
+  ]
+}
