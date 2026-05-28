@@ -1,0 +1,15 @@
+{
+  "name": "magicpath",
+  "version": "1.0.0",
+  "description": "Search, preview, install, and author MagicPath UI components (designs) from Cursor via the magicpath-ai CLI. Create new MagicPath projects, edit canvas components directly from local code, apply design-system themes, and work across personal and team workspaces.",
+  "author": {
+    "name": "MagicPath",
+    "email": "support@magicpath.ai",
+    "url": "https://magicpath.ai"
+  },
+  "homepage": "https://magicpath.ai",
+  "repository": "https://github.com/MagicPathAI/agent-skills",
+  "license": "MIT",
+  "keywords": ["magicpath", "ui", "components", "design"],
+  "skills": "./skills/"
+}
