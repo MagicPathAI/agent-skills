@@ -19,7 +19,7 @@ In Codex (CLI, app, or VS Code extension), add this repo as a marketplace and in
 
 ```text
 codex plugin marketplace add MagicPathAI/agent-skills
-codex plugin install magicpath
+codex plugin add magicpath@magicpath
 ```
 
 ## Install via the Agent Skills CLI
