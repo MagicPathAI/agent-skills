@@ -1,24 +1,35 @@
 {
   "name": "magicpath",
-  "version": "1.0.0",
-  "description": "Search, preview, install, and author MagicPath UI components (designs) from Codex via the magicpath-ai CLI. Create new MagicPath projects, edit canvas components directly from local code, apply design-system themes, and work across personal and team workspaces.",
+  "version": "1.0.2",
+  "description": "Give Codex a multiplayer canvas for your code with MagicPath.",
   "author": {
     "name": "MagicPath",
     "email": "support@magicpath.ai",
-    "url": "https://magicpath.ai"
+    "url": "https://www.magicpath.ai"
   },
-  "homepage": "https://magicpath.ai",
+  "homepage": "https://www.magicpath.ai",
   "repository": "https://github.com/MagicPathAI/agent-skills",
   "license": "MIT",
-  "keywords": ["magicpath", "ui", "components", "design"],
+  "keywords": ["magicpath", "design", "ui-components", "design-system", "design-to-code"],
   "skills": "./skills/",
   "interface": {
     "displayName": "MagicPath",
-    "shortDescription": "Search, install, and author MagicPath UI components and design-system themes.",
-    "longDescription": "MagicPath plugin for Codex. Drives the magicpath-ai CLI to: search, preview, inspect, and install MagicPath UI components (designs) into a project; author and edit canvas components directly from local code via the code start/submit flow; create new MagicPath projects in personal or team workspaces; and apply design-system themes (CSS variables, fonts, and styling instructions). Team-aware — finds components, projects, and attribution across the user's personal workspace and any teams they belong to.",
+    "shortDescription": "Give Codex a multiplayer canvas for your code",
+    "longDescription": "MagicPath gives Codex a multiplayer canvas connected to your codebase. Bring existing UI into the canvas, build interactive designs and component libraries, apply your design system, and ship the result back into production code.",
     "developerName": "MagicPath",
     "category": "Design",
-    "capabilities": ["components", "designs", "themes", "design-system"],
-    "websiteURL": "https://magicpath.ai"
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://www.magicpath.ai",
+    "privacyPolicyURL": "https://www.magicpath.ai/privacy",
+    "termsOfServiceURL": "https://www.magicpath.ai/tos",
+    "defaultPrompt": [
+      "Build an interactive dashboard in MagicPath",
+      "Bring the sidebar from my repo into MagicPath",
+      "Create a component library in MagicPath"
+    ],
+    "brandColor": "#305D3A",
+    "composerIcon": "./assets/magicpath.png",
+    "logo": "./assets/magicpath.png",
+    "screenshots": []
   }
 }
