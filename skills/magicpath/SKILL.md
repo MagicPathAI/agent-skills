@@ -1,6 +1,6 @@
 ---
 name: magicpath
-description: Search, preview, inspect, and install MagicPath UI components with the magicpath-ai CLI. Use when the user mentions MagicPath, wants to browse or search MagicPath components, preview one, or add one to their project. Also use when the user wants to create a new MagicPath project (workspace for designs/components), including projects inside a team. Also use when the user refers to "designs" — in MagicPath, designs are created and stored as components. Also use when the user mentions themes or theming — MagicPath themes (design systems) contain CSS variables, fonts, and styling instructions. Also use when the user asks about MagicPath teams, members, or who worked on something — MagicPath supports teams with shared projects, team members, and attribution tracking.
+description: Search, preview, inspect, and install MagicPath UI components with the magicpath-ai CLI. Use when the user mentions MagicPath, wants to browse or search MagicPath components, preview one, or add one to their project. Also use when the user wants to create a new MagicPath project (workspace for designs/components), including projects inside a team. Also use when the user refers to "designs" — in MagicPath, designs are created and stored as components. Also use when the user mentions themes or theming — MagicPath themes (design systems) contain CSS variables, fonts, and styling instructions. Also use when the user asks about MagicPath teams, members, or who worked on something — MagicPath supports teams with shared projects, team members, and attribution tracking. Also use when the user wants to bring an existing codebase or Git repository into MagicPath — for example "render this project in MagicPath", "bring the sidebar of my app into MagicPath", or importing/recreating UI from a local or online (GitHub/GitLab) repository as MagicPath canvas components.
 compatibility: Requires Node.js (for npx), network access to MagicPath, and browser access for login or preview flows.
 metadata:
   author: MagicPathAI
@@ -231,6 +231,20 @@ npx -y magicpath-ai create-project --name "My Stuff" --team "Acme Inc" -o json  
 
 If the user also asked for a design inside the new project, take the `id` from the response and continue with the canvas-component creation flow described under [Edit or create canvas components from code](#edit-or-create-canvas-components-from-code) (`code start --project <id> --name "..."`, fill in the scaffolded files, `code submit --wait`). Do not re-create the project per design — one project holds many components.
 
+## Bring an existing repository into MagicPath
+
+When the user wants to take UI that already exists in a Git repository — local or online — and reproduce it on their MagicPath canvas (e.g. "bring the sidebar of my app into MagicPath", "render this project in MagicPath", "recreate my landing page here"), recreate it as a canvas component via the `code start` → `code submit` flow.
+
+This is the **inverse** of `add`/`inspect`: the source of truth is the user's repository and the destination is the canvas. Do **not** use `add`, `inspect`, or `code context` for this. The short version:
+
+1. **Get the code** — read a local path directly, or `git clone --depth 1 <url>` an online repo into a scratch directory (kept separate from your `--dir`). Private repos need the user's credentials — ask, don't guess.
+2. **Read the design foundation first** — global CSS (`globals.css`/`index.css`/`app.css`), design tokens (`tailwind.config.*`, CSS variables, token files), fonts, theming strategy, and shared UI primitives. This is what makes the recreation faithful rather than approximate.
+3. **Resolve the target** — for a single element (e.g. the sidebar), open its file and follow all its imports (child components, icons, styles, data) plus the layout parent that gives it size and position. For a whole page/project, identify the entry and decide one interactive frame vs. separate frames per screen (Design Default rule 5) — ask if ambiguous and **stop and wait**.
+4. **Recreate on the canvas** — `code start --project <id> --dir <workdir> --name "..." --width <px> --height <px>`, fill `src/components/generated/<Name>.tsx` faithfully (translate the repo's framework and styling into React + Tailwind v4), match colors/spacing/typography exactly, wire real interactivity, mock data locally, then `code submit --wait`. Honor the Design Defaults (responsive, centered, no device mockups, single screen, fully interactive).
+5. **Verify** the result against the source app with `view`.
+
+Full step-by-step guidance — the styling-translation table, edge cases (monorepos, non-React sources, server components, Tailwind v3→v4), and quick recipes for "bring the sidebar of my app" and "render this project" — lives in [Working with repositories](references/working-with-repositories.md).
+
 ## Edit or create canvas components from code
 
 Use this workflow when the user wants you to author or modify a MagicPath canvas component itself — not install an existing component into a separate application. The `code` subcommands operate on a working directory and a small manifest file (`magicpath-code.json`) that tracks which component and revision the directory belongs to.
@@ -392,3 +406,4 @@ The JSON above contains auth status, projects, and CLI version. If auth.authenti
 ## References
 
 - [CLI Reference](references/cli-reference.md)
+- [Working with repositories](references/working-with-repositories.md) — bring an existing local or online Git repository's UI onto the MagicPath canvas (e.g. "render this project in MagicPath", "bring the sidebar of my app into MagicPath")
