@@ -11,8 +11,6 @@ In Claude Code, add this repo as a marketplace and install the plugin:
 /plugin install magicpath@magicpath
 ```
 
-Once the plugin is accepted into the official Anthropic plugin marketplace, it will also be discoverable from the built-in `/plugin` browser without adding the marketplace manually.
-
 ## Install in Codex
 
 In Codex (CLI, app, or VS Code extension), add this repo as a marketplace and install the plugin:
