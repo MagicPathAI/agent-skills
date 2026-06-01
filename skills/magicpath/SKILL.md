@@ -231,6 +231,8 @@ npx -y magicpath-ai create-project --name "My Stuff" --team "Acme Inc" -o json  
 
 If the user also asked for a design inside the new project, take the `id` from the response and continue with the canvas-component creation flow described under [Edit or create canvas components from code](#edit-or-create-canvas-components-from-code) (`code start --project <id> --name "..."`, fill in the scaffolded files, `code submit --wait`). Do not re-create the project per design — one project holds many components.
 
+To open the new project in the browser, run `npx -y magicpath-ai view <projectId>`. To hand the user a link without opening a browser, run `npx -y magicpath-ai share <projectId> -o json`.
+
 ## Bring an existing repository into MagicPath
 
 When the user wants to take UI that already exists in a Git repository — local or online — and reproduce it on their MagicPath canvas (e.g. "bring the sidebar of my app into MagicPath", "render this project in MagicPath", "recreate my landing page here"), recreate it as a canvas component via the `code start` → `code submit` flow.
@@ -358,9 +360,11 @@ npx -y magicpath-ai list-projects --personal -o json        # list only personal
 npx -y magicpath-ai list-components <id> -o json      # list components in a project
 npx -y magicpath-ai list-components <id> --created-by <userId> -o json  # filter by person
 
-# Inspect components
-npx -y magicpath-ai view <generatedName>              # preview in browser
+# Inspect / open components and projects
+npx -y magicpath-ai view <generatedName>              # open a component preview in browser
+npx -y magicpath-ai view <projectId>                  # open a project in browser
 npx -y magicpath-ai share <generatedName> -o json     # print a shareable URL for a component (no browser open)
+npx -y magicpath-ai share <projectId> -o json         # print a shareable URL for a project (no browser open)
 npx -y magicpath-ai inspect <generatedName> -o json   # show source code (no install)
 npx -y magicpath-ai add <generatedName> --dry-run     # show what would be installed
 

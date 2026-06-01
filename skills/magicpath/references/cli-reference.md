@@ -184,23 +184,25 @@ Key fields for agents:
 - `fonts` — Font metadata with source (`google` or `custom`) and weight URLs
 - `defaultTheme` — Whether the theme defaults to `"light"` or `"dark"`
 
-### `view` — Preview a component
+### `view` — Open a component or project
 
 ```bash
-magicpath-ai view <generatedName>
+magicpath-ai view <generatedName>              # component preview
 magicpath-ai view-component <generatedName>    # alias
+magicpath-ai view <projectId>                  # open the project
 ```
 
-Opens the component preview URL in the default browser. In JSON mode, returns the URL without opening.
+Opens the target in the default browser. In JSON mode, returns the URL without opening. The argument is a component `generatedName` (e.g. `wispy-river-5234`) or a project `id` (numeric) — a numeric id opens the project, anything else opens the component preview.
 
-### `share` — Get a shareable preview URL
+### `share` — Get a shareable URL
 
 ```bash
 magicpath-ai share <generatedName>
-magicpath-ai share <generatedName> -o json
+magicpath-ai share <generatedName> -o json     # { type: "component", url, generatedName }
+magicpath-ai share <projectId> -o json         # { type: "project", url, projectId }
 ```
 
-Prints the component's preview URL to stdout (one line). Doesn't open a browser — use `view` if you want that. JSON output returns `{ url, generatedName }`. Same identifier expectations as `view`: pass the `generatedName` from `search`, `list-components`, `selection`, or the `code` flow.
+Prints the URL to stdout (one line). Doesn't open a browser — use `view` if you want that. Accepts the same identifiers as `view`: a component `generatedName` (from `search`, `list-components`, `selection`, or the `code` flow) or a project `id` (from `list-projects`, `create-project`, or `active-project`).
 
 ### `inspect` — View component source code
 
