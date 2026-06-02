@@ -1,7 +1,7 @@
 {
   "name": "magicpath",
   "displayName": "MagicPath",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Give Cursor a multiplayer canvas for your code with MagicPath. Bring existing UI into the canvas, create component libraries, apply design-system themes, and ship components back into production code.",
   "author": {
     "name": "MagicPath",
