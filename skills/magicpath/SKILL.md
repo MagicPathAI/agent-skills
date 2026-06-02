@@ -1,6 +1,5 @@
 ---
 name: magicpath
-version: 1.0.5
 description: Use MagicPath through the magicpath-ai CLI to find, preview, inspect, install, create, and edit UI components. Trigger for MagicPath requests; designs/components; personal or team projects; active canvas projects or selected components/images; themes/design systems; teams, members, ownership, attribution, or who worked on something; installed component audits; and share/view links. Also use for both workflow directions: installing MagicPath React/TypeScript components into an app with inspect/add and adapting them to production code, or authoring/editing responsive, interactive canvas components with code start/submit. Use when importing or recreating UI from a local path or GitHub/GitLab/Bitbucket repo into MagicPath. In hosts with an embedded browser, keep the MagicPath project canvas open via share URLs for visual work.
 compatibility: Requires Node.js (for npx), network access to MagicPath, and browser access for login or preview flows.
 metadata:
