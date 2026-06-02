@@ -15,6 +15,8 @@ A platform for building, sharing, and installing UI components via AI. Component
 
 MagicPath canvas components can also be created and edited directly from local code via the `npx -y magicpath-ai code ...` subcommands — see [Edit or create canvas components from code](#edit-or-create-canvas-components-from-code). That path is strict: only `src/App.tsx`, `src/index.css`, files under `src/components/generated/`, and temporary image assets under `assets/` in the code working directory are editable.
 
+When this skill runs inside an agent host with an embedded browser, use a MagicPath project as a persistent visual canvas beside the agent when appropriate. If you create a project for canvas authoring, open that project in the embedded browser immediately after creation and before `code start`; see [Working with embedded browsers](references/working-with-embedded-browsers.md).
+
 > **Terminology:** Users often refer to MagicPath components as "designs" — the two terms are interchangeable. When a user says "design," "my designs," or "that design," treat it as meaning a MagicPath component. Search, inspect, and install accordingly.
 >
 > Users also refer to MagicPath design systems as "themes." When a user says "theme," "my themes," or "use the X theme," they mean a MagicPath design system — a set of CSS variables, fonts, and styling instructions. Use `list-themes` and `get-theme` to work with them.
@@ -82,8 +84,8 @@ Run `npx -y magicpath-ai list-members --team "Acme Inc" -o json` to see who's on
 2. **Check current selection** — if the user references "the selected component," "the selected image," "the design I have selected," or otherwise points at a *specific canvas selection*, run `npx -y magicpath-ai selection -o json`. If it returns components, use them directly — skip the search/confirm flow and proceed with the returned `generatedName`(s). Each returned component also includes `selectedRevisionId`, the revision currently shown for that component on the canvas. The response can also include selected `images`; when you subsequently run `code start`, those selected images are made available under `assets/selected/**` as described below. When a downstream command accepts a revision (such as `code context --revision`), pass this value through so the operation targets the version the user is looking at rather than whichever revision happens to be canonical in the database.
 3. **Check the active project** — if the user references "the project I have open," "this project," "what I'm working on," or otherwise implies a working project context without naming a specific component, run `npx -y magicpath-ai active-project -o json`. It returns the project(s) the user currently has open in their browser, even when nothing is selected. If it returns one project, treat it as the working project and skip the project picker. If it returns multiple, list them and ask which one. If it returns an empty list, the user has no canvas open — reach for `list-projects` and ask the user. Pick the right command for what the user said: `selection` for a referenced component, `active-project` for a referenced project, `list-projects` + ask if neither. (Note that `selection` also returns the active projects in its output, so when the user references a component you already get the project for free — no separate `active-project` call needed.)
 4. **Find components** — use `npx -y magicpath-ai search <query> -o json` to search across all projects, or `list-projects -o json` then `list-components <projectId> -o json` to browse. If `active-project` already gave you a project, scope your search to it via `list-components <projectId> -o json` instead of searching every workspace.
-5. **Understand components visually** — `search` and `list-components` results include a `previewImageUrl` field. Download and analyze these images to understand what each component looks like before recommending it. Preview images are for your own understanding — use the `view` command when the user needs to see a component.
-6. **Confirm with the user (STOP and wait)** — unless the user specified an exact generatedName, tell the user what you found (name, generatedName, project), open a browser preview with `npx -y magicpath-ai view <generatedName>`, and ask if it's the right component. If multiple matches, list them all and ask which one. **This is a STOP point — end your response here and wait for the user to reply. Do NOT proceed until the user explicitly confirms.** Do not run `add` or `inspect` yet.
+5. **Understand components visually** — `search` and `list-components` results include a `previewImageUrl` field. Download and analyze these images to understand what each component looks like before recommending it. Preview images are for your own understanding — do not navigate the embedded project canvas to an individual design preview unless the user explicitly asks to see that design there.
+6. **Confirm with the user (STOP and wait)** — unless the user specified an exact generatedName, tell the user what you found (name, generatedName, project) and ask if it's the right component. When an embedded project canvas is active, keep it on the project and only open or share an individual design if the user explicitly asks. Without an embedded project canvas, open a browser preview with `npx -y magicpath-ai view <generatedName>` as the normal confirmation fallback. If multiple matches, list them all and ask which one. **This is a STOP point — end your response here and wait for the user to reply. Do NOT proceed until the user explicitly confirms.** Do not run `add` or `inspect` yet.
 
 ### Phase 2: Understand the Target Context
 
@@ -202,7 +204,9 @@ The MagicPath template uses Tailwind v4. Style this way:
 - **Never just drop a component in.** Always read the surrounding code, understand the layout constraints, and adapt the component to fit. A MagicPath component placed without adaptation is a bug, not a feature.
 - **`inspect` is read-only.** Shows full source code without writing any files. Use this when deciding whether a component fits your needs before committing to install.
 - **`add` is for React/TypeScript projects only.** The `add` command writes `.tsx` files to `src/components/magicpath/` and installs npm dependencies. Only use `add` in JavaScript/TypeScript projects. For non-JS projects (Swift, Python, etc.), use `inspect` to read the component source, then translate the design and behavior into the project's language and framework.
-- **Never run `view` commands in parallel.** The `view` command opens a browser window for the user. Only open one preview at a time.
+- **Never run `view` commands in parallel.** The `view` command opens a browser window for the user. Only open one target at a time.
+- **Keep an embedded browser on the project canvas.** Do not navigate it to individual design previews unless the user explicitly asks; return a design share link instead when that is sufficient.
+- **Open a newly created project before authoring into it.** When an embedded browser is available and the request includes work inside a new project, show the project canvas immediately after `create-project` and before `code start` or `code submit`.
 
 ## Creating a project
 
@@ -231,7 +235,19 @@ npx -y magicpath-ai create-project --name "My Stuff" --team "Acme Inc" -o json  
 
 If the user also asked for a design inside the new project, take the `id` from the response and continue with the canvas-component creation flow described under [Edit or create canvas components from code](#edit-or-create-canvas-components-from-code) (`code start --project <id> --name "..."`, fill in the scaffolded files, `code submit --wait`). Do not re-create the project per design — one project holds many components.
 
-To open the new project in the browser, run `npx -y magicpath-ai view <projectId>`. To hand the user a link without opening a browser, run `npx -y magicpath-ai share <projectId> -o json`.
+When the task includes creating or editing designs inside a newly created project, treat that project as the canvas. In an embedded-browser host, the order is mandatory: immediately after `create-project` returns an `id`, run `npx -y magicpath-ai share <projectId> -o json`, open the returned project URL in the embedded browser, and only then begin `code start` or `code submit`. Keep that project canvas visible while work appears there; do not navigate to the generated design preview after submission unless the user explicitly asks to see that design alone. If no embedded browser exists, use `npx -y magicpath-ai view <projectId>` when user-facing navigation is needed.
+
+## Use a MagicPath project as an embedded canvas when available
+
+Some agent hosts, including Codex and some Cursor workflows, can provide an embedded or in-app browser. When that capability is available, a MagicPath **project** can remain open beside the agent as a persistent canvas: the agent works from local code and context while the user sees and selects work on the canvas.
+
+Use this for opening a newly created project, reconnecting to the user's active project, or beginning canvas authoring in a named project. Do not automatically navigate the embedded browser to an individual design or component; only show one there when the user explicitly asks to open that specific design.
+
+For a project, do not call `view` first in an embedded-browser host: `view` opens the operating-system browser. Instead, run `npx -y magicpath-ai share <projectId> -o json` to get its URL without opening a window, then navigate the host's embedded browser to the returned `url`. If no embedded browser exists, it cannot be controlled reliably, or the user explicitly wants their normal browser, use `view <projectId>`.
+
+CLI authentication and embedded-browser authentication are separate. A successful `whoami` or `create-project` command does not mean the visible browser pane is signed into MagicPath. If opening the returned `/files/<projectId>` URL redirects to the home or sign-in experience, keep the task focused on that project: tell the user to sign into MagicPath in the embedded browser, then navigate back to the same project URL after sign-in. Do not substitute a public individual-design preview just because it loads without the project-canvas session.
+
+Do not open a project automatically for background work such as `info`, `whoami`, listing/searching data, retrieving themes, inspecting source, or installing a component into an application. Full decision guidance and recipes live in [Working with embedded browsers](references/working-with-embedded-browsers.md).
 
 ## Bring an existing repository into MagicPath
 
@@ -411,3 +427,4 @@ The JSON above contains auth status, projects, and CLI version. If auth.authenti
 
 - [CLI Reference](references/cli-reference.md)
 - [Working with repositories](references/working-with-repositories.md) — bring an existing local or online Git repository's UI onto the MagicPath canvas (e.g. "render this project in MagicPath", "bring the sidebar of my app into MagicPath")
+- [Working with embedded browsers](references/working-with-embedded-browsers.md) — use a MagicPath project as the persistent canvas inside Codex, Cursor, or another host with an in-app browser
