@@ -408,3 +408,34 @@ npx -y magicpath-ai code status <jobId> -o json
 ```
 
 Returns `pending`, `processing`, `completed`, `failed`, or `cancelled`. Failed jobs include sanitized build diagnostics when available.
+
+### `image` — List and add images on a project canvas
+
+Standalone images that live directly on a project's canvas (alongside components). This is distinct from the `assets/` files in the `code` flow, which are build inputs for a single component — `image` operates on the project canvas itself.
+
+#### `image list` — List the images on a project canvas
+
+```bash
+npx -y magicpath-ai image list <projectId> -o json
+```
+
+JSON output: `{ images: [{ id, name, url, position: { x, y, z, width, height }, createdAt, updatedAt }] }`. The `url` is a public image URL — download it to visually inspect what an image looks like (the same way `previewImageUrl` is used for components). Use this to "see" the images already present in a project.
+
+#### `image add` — Add an image to a project canvas
+
+```bash
+npx -y magicpath-ai image add <projectId> ./hero.png -o json
+npx -y magicpath-ai image add <projectId> https://example.com/hero.png --name "Hero" -o json
+```
+
+Uploads a local image file or a remote URL to the project and places it on the canvas, where it appears automatically. Requires editor access to the project.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--name <name>` | Display name | the file name |
+| `--x <x>` | Canvas x position | `0` |
+| `--y <y>` | Canvas y position | `0` |
+| `--width <px>` | Width in canvas units | the image's intrinsic width |
+| `--height <px>` | Height in canvas units | the image's intrinsic height |
+
+Width and height default to the image's real pixel dimensions so it isn't stretched; pass `--width`/`--height` only to override. JSON output: `{ image: { id, name, url, position } }`.
