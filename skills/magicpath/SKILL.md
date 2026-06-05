@@ -1,6 +1,6 @@
 ---
 name: magicpath
-description: Use MagicPath through the magicpath-ai CLI to find, preview, inspect, install, create, and edit UI components. Trigger for MagicPath requests; designs/components; personal or team projects; active canvas projects or selected components/images; themes/design systems; teams, members, ownership, attribution, or who worked on something; installed component audits; and share/view links. Also use for both workflow directions, installing MagicPath React/TypeScript components into an app with inspect/add and adapting them to production code, or authoring/editing responsive, interactive canvas components with code start/submit. Use when importing or recreating UI from a local path or GitHub/GitLab/Bitbucket repo into MagicPath. In hosts with an embedded browser, keep the MagicPath project canvas open via share URLs for visual work.
+description: Use MagicPath through the magicpath-ai CLI to find, preview, inspect, install, create, and edit UI components. Trigger for MagicPath requests; designs/components; personal or team projects; active canvas projects or selected components/images; themes/design systems; teams, members, ownership, attribution, or who worked on something; installed component audits; and share/view links. Also use for both workflow directions, installing MagicPath React/TypeScript components into an app with inspect/add and adapting them to production code, or authoring/editing responsive, interactive canvas components with code start/submit. Use when importing or recreating UI from a local path or GitHub/GitLab/Bitbucket repo into MagicPath, including importing a Storybook design system (its component source, stories, and tokens) onto the canvas 1:1. In hosts with an embedded browser, keep the MagicPath project canvas open via share URLs for visual work.
 compatibility: Requires Node.js (for npx), network access to MagicPath, and browser access for login or preview flows.
 metadata:
   author: MagicPathAI
@@ -263,6 +263,20 @@ This is the **inverse** of `add`/`inspect`: the source of truth is the user's re
 
 Full step-by-step guidance — the styling-translation table, edge cases (monorepos, non-React sources, server components, Tailwind v3→v4), and quick recipes for "bring the sidebar of my app" and "render this project" — lives in [Working with repositories](references/working-with-repositories.md).
 
+## Import a Storybook design system into MagicPath
+
+When the user points at a **Storybook** — `.stories.*` files, a `.storybook/` directory, or a running Storybook URL — and wants its components, stories, and design tokens recreated on the canvas (e.g. "import my Storybook into MagicPath, 1:1", "bring my design system into MagicPath", "create every component from this library on my canvas"), use the `code start` → `code submit` authoring flow.
+
+This is a **specialization of [Working with repositories](references/working-with-repositories.md)**: the source of truth is the user's Storybook and the destination is the canvas. Do **not** use `add`, `inspect`, or `code context` for this. The goal is a **1:1 import using the actual component source code** — port the code, not the appearance. The short version:
+
+1. **Locate the Storybook** — read `.storybook/main.{js,ts}` (story glob) and `.storybook/preview.{js,ts}` (fonts, `parameters.backgrounds`, global decorators); a runnable Storybook is not required, the story files are the contract.
+2. **Inventory** — list every component with its source and `.stories.*` path, count the named story exports per component, and include token/foundation files. The default plan is **one canvas component per Storybook component** (all its stories in one showcase frame) plus one for tokens — confirm and **stop and wait** if granularity is ambiguous.
+3. **Port verbatim** — copy each component source into `src/components/generated/` with only mechanical changes (strip `prop-types`/unavailable packages, add minimal strict-TS annotations); every hex, padding, easing, and emoji stays identical. Internal state and interactions carry over for free.
+4. **Build the showcase** — one `code start` session per component, each with its own `--dir` and a library-prefixed `--name` (avoid stub/source filename collisions), in parallel where supported. The stub renders every story export with its exact `args`, labeled by story name; port `preview.js` fonts to the top of `src/index.css`. Then `code submit --wait` and fix-on-fail.
+5. **Verify completeness** — `list-components` shows every component plus the tokens sheet, and rendered-instance counts match story-export counts. Report per-component numbers and any deviations from verbatim.
+
+Full step-by-step guidance — the mental model, porting rules, the fidelity-principles table, the reuse payoff, and quick recipes for "import 100% of my Storybook, 1:1" and "now build a ___ using my imported library" — lives in [Working with Storybook](references/working-with-storybook.md).
+
 ## Edit or create canvas components from code
 
 Use this workflow when the user wants you to author or modify a MagicPath canvas component itself — not install an existing component into a separate application. The `code` subcommands operate on a working directory and a small manifest file (`magicpath-code.json`) that tracks which component and revision the directory belongs to.
@@ -427,4 +441,5 @@ The JSON above contains auth status, projects, and CLI version. If auth.authenti
 
 - [CLI Reference](references/cli-reference.md)
 - [Working with repositories](references/working-with-repositories.md) — bring an existing local or online Git repository's UI onto the MagicPath canvas (e.g. "render this project in MagicPath", "bring the sidebar of my app into MagicPath")
+- [Working with Storybook](references/working-with-storybook.md) — import a Storybook design system (its component source, stories, and tokens) onto the MagicPath canvas 1:1 (e.g. "import 100% of my Storybook", "bring my design system into MagicPath")
 - [Working with embedded browsers](references/working-with-embedded-browsers.md) — use a MagicPath project as the persistent canvas inside Codex, Cursor, or another host with an in-app browser
