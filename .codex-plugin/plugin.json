@@ -1,6 +1,6 @@
 {
   "name": "magicpath",
-  "version": "1.0.6",
+  "version": "2.0.0",
   "description": "Give Codex a multiplayer canvas for your code with MagicPath.",
   "author": {
     "name": "MagicPath",
@@ -10,7 +10,13 @@
   "homepage": "https://www.magicpath.ai",
   "repository": "https://github.com/MagicPathAI/agent-skills",
   "license": "MIT",
-  "keywords": ["magicpath", "design", "ui-components", "design-system", "design-to-code"],
+  "keywords": [
+    "magicpath",
+    "design",
+    "ui-components",
+    "design-system",
+    "design-to-code"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "MagicPath",
@@ -18,7 +24,11 @@
     "longDescription": "MagicPath gives Codex a multiplayer canvas connected to your codebase. Bring existing UI into the canvas, build interactive designs and component libraries, apply your design system, and ship the result back into production code.",
     "developerName": "MagicPath",
     "category": "Design",
-    "capabilities": ["Interactive", "Read", "Write"],
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
     "websiteURL": "https://www.magicpath.ai",
     "privacyPolicyURL": "https://www.magicpath.ai/privacy",
     "termsOfServiceURL": "https://www.magicpath.ai/tos",

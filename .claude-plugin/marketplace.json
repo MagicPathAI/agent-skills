@@ -14,7 +14,12 @@
       "repository": "https://github.com/MagicPathAI/agent-skills",
       "license": "MIT",
       "category": "design",
-      "tags": ["magicpath", "ui", "components", "design"]
+      "tags": [
+        "magicpath",
+        "ui",
+        "components",
+        "design"
+      ]
     }
   ]
 }

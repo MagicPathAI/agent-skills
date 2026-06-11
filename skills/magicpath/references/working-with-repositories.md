@@ -1,6 +1,6 @@
 # Working With Repositories — Bring an Existing Codebase Into MagicPath
 
-> **IMPORTANT:** This flow is the **inverse** of `add`/`inspect`. With `add`/`inspect` the source of truth is the MagicPath registry and the destination is the user's app. Here the **source of truth is the user's repository** and the **destination is the MagicPath canvas**. You recreate the repo's UI as a canvas component using the `code start` → `code submit` authoring flow. Do **not** use `add`, `inspect`, or `code context` for this — they are for other workflows (see the boundaries section below).
+> **IMPORTANT:** This flow is the **inverse** of `install`/`inspect`. With `install`/`inspect` the source of truth is the MagicPath registry and the destination is the user's app. Here the **source of truth is the user's repository** and the **destination is the MagicPath canvas**. You recreate the repo's UI as a canvas component using the `code start` → `code submit` authoring flow. Do **not** use `install`, `inspect`, or `code read` for this — they are for other workflows (see the boundaries section below).
 
 This reference tells an external agent (MagicPath's own agent, Claude Code, Codex, Cursor, etc.) exactly what to do when the user wants to take UI that already exists in a Git repository — local or online — and reproduce it faithfully as a React component on their MagicPath canvas.
 
@@ -13,7 +13,7 @@ Reach for this reference when the user points at existing code and asks to get i
 - "Design from my existing dashboard." / "Pull my `<Header />` into a MagicPath design."
 - Any message that pairs a **local path** (e.g. `~/code/acme-web`) or an **online repo URL** (GitHub/GitLab/Bitbucket) with MagicPath intent.
 
-If the user is instead asking to install a MagicPath registry component into their app, that is the `add`/`inspect` flow — not this one.
+If the user is instead asking to install a MagicPath registry component into their app, that is the `install`/`inspect` flow — not this one.
 
 ## The mental model
 
@@ -55,7 +55,7 @@ Before touching the target component, understand the project's styling system. *
 5. **Note the theming strategy.** Light/dark handling, `ThemeProvider`, `class="dark"` toggling, `prefers-color-scheme`.
 6. **Find shared UI primitives.** Look for a `components/ui`, `design-system`, or `primitives` folder. The target component almost certainly composes these (Button, Card, Icon, etc.), and you'll need them to reproduce it.
 
-> **If the user has a MagicPath theme that corresponds to this brand**, prefer reconciling against it: run `list-themes` / `get-theme` and use the theme's CSS variables, fonts, and `prompt` as the styling target. Otherwise, derive the tokens straight from the repo as above.
+> **If the user has a MagicPath theme that corresponds to this brand**, prefer reconciling against it: run `theme list` / `theme get` and use the theme's CSS variables, fonts, and `prompt` as the styling target. Otherwise, derive the tokens straight from the repo as above.
 
 ## Phase 2 — Resolve the target
 
@@ -93,11 +93,11 @@ Pin down exactly what the user asked for and read everything it depends on.
 
 Use the **create** path of the `code` flow. (Full command details live in `cli-reference.md`.)
 
-1. **Resolve a project.** You need a `projectId`. Use `active-project -o json` if the user has one open, otherwise ask or `create-project`. (See the skill's *Creating a project* section.)
+1. **Resolve a project.** You need a `projectId`. Run `context` and use `activeProjects` if the user has one open, otherwise ask or `project create --name "…"`.
 2. **Start the session before writing files** so the user sees agent presence on the canvas:
 
    ```bash
-   npx -y magicpath-ai code start --project <projectId> --dir ./mp-build --name "Sidebar" --width <px> --height <px> -o json
+   npx -y magicpath-ai@experimental code start --project <projectId> --dir ./mp-build --name "Sidebar" --width <px> --height <px>
    ```
 
 3. **Fill in the scaffold faithfully.** Implement the recreation in `src/components/generated/<Name>.tsx`, splitting sub-components (nav item, avatar, etc.) into sibling files under `src/components/generated/`. Edit `src/index.css` for tokens/fonts/custom CSS. **Do not rewrite `src/App.tsx`** — it's pre-wired; only touch it to change the `theme` value. Only these surfaces are editable: `src/App.tsx`, `src/index.css`, `src/components/generated/**`, and `assets/**`.
@@ -112,14 +112,14 @@ Use the **create** path of the `code` flow. (Full command details live in `cli-r
 7. **Submit and fix:**
 
    ```bash
-   npx -y magicpath-ai code submit --dir ./mp-build --width <px> --height <px> --wait -o json
+   npx -y magicpath-ai@experimental code submit --dir ./mp-build --width <px> --height <px>
    ```
 
-   If the job fails, read the returned diagnostics, fix only the allowed files, and re-submit. Don't start a new component to work around a build failure.
+   The command waits for the build by default. If the job fails, read the returned diagnostics, fix only the allowed files, and re-submit. Don't start a new component to work around a build failure.
 
 ## Phase 5 — Verify fidelity
 
-- Open the result (`view <generatedName>`) and compare it against the source app side by side.
+- Download the `previewImageUrl` returned by `code submit` and compare it against the source app side by side. If the user wants to look themselves, give them the design `url` (or `open <generatedName> --browser`).
 - Check that tokens resolved (no stray defaults), fonts loaded, dark mode matches if relevant, and interactions behave like the original.
 - Confirm it stays centered and intact at the target width and degrades sensibly when the frame is resized.
 
@@ -143,8 +143,8 @@ Use the **create** path of the `code` flow. (Full command details live in `cli-r
 
 ## Boundaries — what NOT to do
 
-- **Don't use `add`.** That installs registry components into an app; it's the opposite direction.
-- **Don't use `inspect` or `code context`.** Those read MagicPath-side source. Here you're reading the **user's repo** and creating a **new** canvas component via `code start` → `code submit`.
+- **Don't use `install`.** That installs registry components into an app; it's the opposite direction.
+- **Don't use `inspect` or `code read`.** Those read MagicPath-side source. Here you're reading the **user's repo** and creating a **new** canvas component via `code start` → `code submit`.
 - **Don't edit forbidden files** in the working directory: no `package.json`, `vite.config.*`, `src/main.tsx`, lockfiles, or arbitrary repo files — only `src/App.tsx`, `src/index.css`, `src/components/generated/**`, and `assets/**`.
 - **Don't dump the whole repo onto the canvas.** Scope to what the user asked for; confirm the screen split before creating multiple frames.
 - **Don't invent credentials** for private repos — ask.
@@ -153,7 +153,7 @@ Use the **create** path of the `code` flow. (Full command details live in `cli-r
 ## Quick recipes
 
 **"Bring the sidebar of my app into MagicPath"**
-1. Get the code (Phase 0). 2. Read global CSS + tokens + fonts (Phase 1). 3. Open the `Sidebar` component, follow its imports (child items, icons, styles) and read its layout parent for width/position (Phase 2). 4. `code start --project <id> --dir ./mp-build --name "Sidebar" --width <px> --height <px>`. 5. Recreate it faithfully in `src/components/generated/Sidebar.tsx` — real collapse/active-item state, matched colors/spacing/typography, fluid + centered, no device frame. 6. `code submit --wait`. 7. Verify against the app.
+1. Get the code (Phase 0). 2. Read global CSS + tokens + fonts (Phase 1). 3. Open the `Sidebar` component, follow its imports (child items, icons, styles) and read its layout parent for width/position (Phase 2). 4. `code start --project <id> --dir ./mp-build --name "Sidebar" --width <px> --height <px>`. 5. Recreate it faithfully in `src/components/generated/Sidebar.tsx` — real collapse/active-item state, matched colors/spacing/typography, fluid + centered, no device frame. 6. `code submit`. 7. Verify the returned preview image against the app.
 
 **"Render this project / this page in MagicPath"**
-1. Get the code (Phase 0). 2. Read the design foundation (Phase 1). 3. Identify the page entry; if ambiguous, ask which screen and **stop**. Walk the tree and decide one interactive frame vs. multiple frames (Phase 2 / Design Default rule 5). 4. For each frame: `code start` with viewport-appropriate dimensions, recreate faithfully with internal navigation state for multi-view flows, mock data realistically. 5. `code submit --wait` each. 6. Verify each against the source.
+1. Get the code (Phase 0). 2. Read the design foundation (Phase 1). 3. Identify the page entry; if ambiguous, ask which screen and **stop**. Walk the tree and decide one interactive frame vs. multiple frames (Phase 2 / Design Default rule 5). 4. For each frame: `code start` with viewport-appropriate dimensions, recreate faithfully with internal navigation state for multi-view flows, mock data realistically. 5. `code submit` each. 6. Verify each returned preview image against the source.

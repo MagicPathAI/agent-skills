@@ -1,7 +1,7 @@
 {
   "name": "magicpath",
   "displayName": "MagicPath",
-  "version": "1.0.6",
+  "version": "2.0.0",
   "description": "Give Cursor a multiplayer canvas for your code with MagicPath. Bring existing UI into the canvas, create component libraries, apply design-system themes, and ship components back into production code.",
   "author": {
     "name": "MagicPath",
@@ -11,8 +11,19 @@
   "repository": "https://github.com/MagicPathAI/agent-skills",
   "license": "MIT",
   "logo": "assets/magicpath.png",
-  "keywords": ["magicpath", "design", "ui-components", "design-system", "design-to-code"],
+  "keywords": [
+    "magicpath",
+    "design",
+    "ui-components",
+    "design-system",
+    "design-to-code"
+  ],
   "category": "design",
-  "tags": ["interactive-canvas", "components", "themes", "design-to-code"],
+  "tags": [
+    "interactive-canvas",
+    "components",
+    "themes",
+    "design-to-code"
+  ],
   "skills": "./skills/"
 }
