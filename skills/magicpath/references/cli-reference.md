@@ -58,6 +58,130 @@ JSON output: `{ team: { id, name }, members: [{ id, displayName, email, role }] 
 
 Use `list-members` to resolve a person's name to their user ID, then use `--created-by <userId>` on `list-components` to find their work.
 
+### `skills list` — List skills
+
+```bash
+magicpath-ai skills list
+magicpath-ai skills list -o json
+magicpath-ai skills list --owned-only -o json
+magicpath-ai skills list --team "Acme Inc" -o json
+```
+
+Lists skills available in the user's personal workspace, or in a team when `--team` is passed. Public MagicPath skills are included by default because they are invocable in chat; pass `--owned-only` to hide public skills and show only editable user/team skills.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--team <nameOrId>` | List skills for a specific team | personal |
+| `--owned-only` | Hide public MagicPath skills | false |
+
+JSON output: `{ skills, workspace }`. Each skill includes `id`, `name`, `slug`, `description`, `instructions`, `sourceFormat` (`EDITOR` or `ARCHIVE`), `enabled`, `isPublic`, and owner fields.
+
+### `skills get` — Retrieve a skill
+
+```bash
+magicpath-ai skills get <skillIdOrSlug> -o json
+magicpath-ai skills get <skillIdOrSlug> --files -o json
+magicpath-ai skills get <skillIdOrSlug> --file reference/examples.md
+magicpath-ai skills get <skillIdOrSlug> --team "Acme Inc" -o json
+```
+
+Shows a skill by ID, slash-command slug, or exact name. Use `--files` to list bundled files on imported package skills. Use `--file <path>` to print one bundled file's content.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--team <nameOrId>` | Look up a team skill | personal |
+| `--files` | Also list bundled files | false |
+| `--file <path>` | Print one bundled file | none |
+
+JSON output without file flags: `{ skill }`. With `--files`: `{ skill, files }`. With `--file`: `{ skill, file }`.
+
+### `skills create` — Create an editable skill
+
+```bash
+magicpath-ai skills create --name "Skill name" --description "Use when ..." --instructions "Do this..." -o json
+magicpath-ai skills create --name "Skill name" --description "Use when ..." --instructions-file ./SKILL.md -o json
+magicpath-ai skills create --name "Team skill" --description "Use when ..." --instructions-file ./SKILL.md --team "Acme Inc" -o json
+```
+
+Creates an editable personal or team skill. For anything longer than a short instruction, prefer `--instructions-file` so Markdown formatting is preserved.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--name <name>` | Skill name | required |
+| `--description <text>` | When to use the skill | required |
+| `--instructions <text>` | Skill instructions | required unless `--instructions-file` is used |
+| `--instructions-file <path>` | Read instructions from a local file | required unless `--instructions` is used |
+| `--team <nameOrId>` | Create the skill in this team | personal |
+
+JSON output: `{ skill, workspace }`.
+
+### `skills import` — Import a skill package
+
+```bash
+magicpath-ai skills import ./my-skill.skill -o json
+magicpath-ai skills import ./my-skill.zip --team "Acme Inc" -o json
+```
+
+Imports a `.zip` or `.skill` package into the user's personal workspace or a team. Package skills are content-immutable after import, but can still be enabled or disabled.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--team <nameOrId>` | Import into this team | personal |
+
+JSON output: `{ skill, workspace }`.
+
+### `skills update` — Update or enable/disable a skill
+
+```bash
+magicpath-ai skills update <skillIdOrSlug> --description "New description" -o json
+magicpath-ai skills update <skillIdOrSlug> --instructions-file ./SKILL.md -o json
+magicpath-ai skills update <skillIdOrSlug> --disable -o json
+magicpath-ai skills update <skillIdOrSlug> --enable --team "Acme Inc" -o json
+```
+
+Updates an editable skill by ID, slug, or exact name. `ARCHIVE` package skills cannot have name, description, or instructions edited; use this command only to enable/disable them. Public MagicPath skills are read-only.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--name <name>` | New skill name | unchanged |
+| `--description <text>` | New description | unchanged |
+| `--instructions <text>` | New instructions | unchanged |
+| `--instructions-file <path>` | Read new instructions from a file | unchanged |
+| `--enable` | Enable the skill for chat | unchanged |
+| `--disable` | Disable the skill for chat | unchanged |
+| `--team <nameOrId>` | Update a team skill | personal |
+
+JSON output: `{ skill, workspace }`.
+
+### `skills delete` — Delete an owned skill
+
+```bash
+magicpath-ai skills delete <skillIdOrSlug>
+magicpath-ai skills delete <skillIdOrSlug> -y -o json
+magicpath-ai skills delete <skillIdOrSlug> --team "Acme Inc" -y -o json
+```
+
+Deletes an editable personal or team skill. Always pass `-y` in non-interactive agent contexts. Public MagicPath skills cannot be deleted through this command.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--team <nameOrId>` | Delete a team skill | personal |
+| `--yes`, `-y` | Skip confirmation prompt | false |
+
+JSON output: `{ skill, workspace }`.
+
+### Installing MagicPath skills into a local agent
+
+To install a MagicPath-hosted skill locally, reconstruct the Agent Skills folder from CLI output:
+
+1. Run `magicpath-ai skills get <skillIdOrSlug> -o json`.
+2. Create a local folder named with the returned `skill.slug`.
+3. Write `SKILL.md` using the returned `skill.name`, `skill.description`, and `skill.instructions`.
+4. If the skill has bundled files, run `magicpath-ai skills get <skillIdOrSlug> --files -o json`, then fetch each path with `magicpath-ai skills get <skillIdOrSlug> --file <path>` and write it under the local skill folder.
+5. Register that local folder with the current agent host using the host's supported local skill install flow.
+
+Ask before writing into global agent configuration directories.
+
 ### `search` — Search components across all projects
 
 ```bash

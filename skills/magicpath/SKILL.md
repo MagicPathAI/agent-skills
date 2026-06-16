@@ -1,6 +1,6 @@
 ---
 name: magicpath
-description: Use MagicPath through the magicpath-ai CLI to find, preview, inspect, install, create, and edit UI components. Trigger for MagicPath requests; designs/components; personal or team projects; active canvas projects or selected components/images; themes/design systems; teams, members, ownership, attribution, or who worked on something; installed component audits; and share/view links. Also use for both workflow directions, installing MagicPath React/TypeScript components into an app with inspect/add and adapting them to production code, or authoring/editing responsive, interactive canvas components with code start/submit. Use when importing or recreating UI from a local path or GitHub/GitLab/Bitbucket repo into MagicPath. In hosts with an embedded browser, keep the MagicPath project canvas open via share URLs for visual work.
+description: Use MagicPath through the magicpath-ai CLI to find, preview, inspect, install, create, and edit UI components, and to manage MagicPath skills. Trigger for MagicPath requests; designs/components; personal or team projects; active canvas projects or selected components/images; themes/design systems; user/team skills; teams, members, ownership, attribution, or who worked on something; installed component audits; and share/view links. Also use for both workflow directions, installing MagicPath React/TypeScript components into an app with inspect/add and adapting them to production code, authoring/editing responsive interactive canvas components with code start/submit, or creating/retrieving/updating/importing/deleting MagicPath skills with the skills command group. Use when importing or recreating UI from a local path or GitHub/GitLab/Bitbucket repo into MagicPath. In hosts with an embedded browser, keep the MagicPath project canvas open via share URLs for visual work.
 compatibility: Requires Node.js (for npx), network access to MagicPath, and browser access for login or preview flows.
 metadata:
   author: MagicPathAI
@@ -22,6 +22,8 @@ When this skill runs inside an agent host with an embedded browser, use a MagicP
 > Users also refer to MagicPath design systems as "themes." When a user says "theme," "my themes," or "use the X theme," they mean a MagicPath design system — a set of CSS variables, fonts, and styling instructions. Use `list-themes` and `get-theme` to work with them.
 >
 > Users may belong to **teams** (also called "workspaces"). When a user says "the team's designs," "our team's components," or mentions a team name like "Acme Inc," they mean the projects and components owned by that team. Use `list-teams`, `--team`, and `--personal` flags to navigate between personal and team workspaces.
+>
+> Users may also ask about **skills** they created in MagicPath. These are reusable instruction bundles that can be invoked from MagicPath chat and managed with `npx -y magicpath-ai skills ...`. Personal skills live in the user's workspace; team skills live in a MagicPath team. Public MagicPath skills are read-only unless the platform says otherwise.
 
 ## First Step
 
@@ -74,9 +76,59 @@ Run `npx -y magicpath-ai list-members --team "Acme Inc" -o json` to see who's on
 - **"My designs"** without mentioning a team → the default (all projects) is usually correct. Only use `--personal` if they explicitly want to exclude team projects.
 - **"Use the team's theme"** → `list-themes --team "Acme Inc" -o json`, then `get-theme <name> --team "Acme Inc" -o json`.
 
+## Managing MagicPath Skills
+
+Use this flow when the user asks to create, list, inspect, update, import, delete, enable/disable, or locally install skills stored in MagicPath. Prefer JSON mode for every data-returning command:
+
+```bash
+npx -y magicpath-ai skills list -o json
+npx -y magicpath-ai skills list --team "Acme Inc" -o json
+npx -y magicpath-ai skills get <skillIdOrSlug> -o json
+npx -y magicpath-ai skills create --name "Skill name" --description "When to use it" --instructions-file ./SKILL.md -o json
+npx -y magicpath-ai skills import ./skill-package.skill -o json
+npx -y magicpath-ai skills update <skillIdOrSlug> --disable -o json
+npx -y magicpath-ai skills delete <skillIdOrSlug> -y -o json
+```
+
+### Scope and Ownership
+
+- Use `--team <nameOrId>` when the user says the skill belongs to a team/workspace.
+- Omit `--team` for personal skills.
+- `skills list` includes public MagicPath skills by default because those are available to the user in chat. Pass `--owned-only` when the user wants skills they can edit.
+- Public skills are read-only. Do not try to update or delete public skills unless the command output clearly identifies them as owned/editable.
+- Imported `.zip` or `.skill` packages are content-immutable in MagicPath; they can still be enabled or disabled with `skills update <id> --enable/--disable`.
+
+### Creating or Updating Skills
+
+- For more than a short one-line instruction, write the instructions to a local file and use `--instructions-file`. This avoids shell quoting problems and preserves Markdown.
+- A MagicPath skill requires a non-empty name, description, and instructions. The description should say when the skill should be used; the instructions should say how to do the work.
+- If a user is turning an observed workflow into a reusable skill, summarize the trigger, constraints, steps, examples, and any files or references the future agent should read.
+
+### Installing a MagicPath Skill Locally
+
+When a user wants a skill from MagicPath installed into their external coding agent, first retrieve it, then recreate it as a local Agent Skills folder:
+
+1. Run `npx -y magicpath-ai skills get <skillIdOrSlug> -o json`.
+2. Create a folder named after the skill slug.
+3. Write `SKILL.md` with frontmatter containing at least `name` and `description`, followed by the retrieved `instructions`:
+
+```markdown
+---
+name: example-skill
+description: Use when ...
+---
+
+...instructions from MagicPath...
+```
+
+4. If the skill has bundled package files, run `npx -y magicpath-ai skills get <skillIdOrSlug> --files -o json`, then fetch each file with `--file <path>` and recreate the same relative paths in the local skill folder.
+5. Install or register that folder using the current agent host's local skill workflow. If the host supports the Agent Skills CLI, install from the local folder with that tool; otherwise place the folder in the host's documented local skills directory.
+
+Ask before writing outside the user's current project or into a global agent configuration directory.
+
 ## Workflow
 
-> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-teams`, `list-themes`, `get-theme`, `selection`, `active-project`, `info`, `add`, `inspect`, `code`). This gives you structured output to work with instead of human-readable tables.
+> **Always use `-o json`** for all data-returning commands (`search`, `list-projects`, `list-components`, `list-teams`, `list-themes`, `get-theme`, `skills`, `selection`, `active-project`, `info`, `add`, `inspect`, `code`). This gives you structured output to work with instead of human-readable tables.
 
 ### Phase 1: Discover
 
