@@ -1,7 +1,7 @@
 {
   "name": "magicpath",
   "description": "Search, preview, install, and author MagicPath UI components (designs) from Claude Code via the magicpath-ai CLI. Create new MagicPath projects, edit canvas components directly from local code, apply design-system themes, and work across personal and team workspaces.",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "author": {
     "name": "MagicPath",
     "email": "support@magicpath.ai"
