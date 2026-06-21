@@ -31,6 +31,22 @@ Run `npx -y magicpath-ai info -o json` to check auth status and project context.
 
 - If `auth.authenticated` is false, run `npx -y magicpath-ai login`, wait for browser auth to finish, then verify with `npx -y magicpath-ai whoami -o json`.
 
+## Guest Sessions
+
+If the user gives you a **pairing code** (a short code like `gst_…`, usually because they're trying MagicPath without an account), connect with it once:
+
+```bash
+npx -y magicpath-ai login --guest-code <code>
+```
+
+Then run `npx -y magicpath-ai whoami -o json` — it reports `guest: true`, the one `projectId` you can work with, and a `canvasUrl`. Build on that project with the normal `code start --project <projectId>` → `code submit` flow; every submit appears live on the canvas.
+
+A guest session is scoped to that single project and expires. Within it:
+
+- Use `code start` / `code submit` to create and edit designs on the project — this is the whole point of the session.
+- In a host with an embedded browser, open the `canvasUrl` (from `whoami`) so the user can watch their canvas update beside you. The `canvasUrl` is the only way to open a guest canvas — do not use `share` or `view`, which require a full account.
+- Other workspace features (teams, additional projects, themes) belong to full accounts. If a command reports it needs an account, or the session has expired, tell the user they can sign up at https://magicpath.ai to keep the project and unlock everything else. Never tell a guest to run `login` without a pairing code.
+
 ## Working with Teams
 
 Users may belong to teams that own shared projects and themes. By default, `list-projects` and `search` return results from **all** workspaces (personal + every team the user belongs to). Use filtering flags to narrow scope.
