@@ -16,8 +16,9 @@ Returns auth status, user info, teams, projects (personal + team), and CLI versi
 ### `login` — Authenticate
 
 ```bash
-magicpath-ai login                    # one-click browser login (auto-completes)
-magicpath-ai login --code <code>      # exchange auth code directly (headless fallback)
+magicpath-ai login                       # one-click browser login (auto-completes)
+magicpath-ai login --code <code>         # exchange auth code directly (headless fallback)
+magicpath-ai login --guest-code <code>   # connect to a guest project (no account)
 ```
 
 Opens the browser and completes login automatically when the user authorizes.
@@ -25,6 +26,7 @@ Opens the browser and completes login automatically when the user authorizes.
 | Flag | Description |
 |------|-------------|
 | `--code <code>` | Exchange a browser authorization code directly (headless fallback) |
+| `--guest-code <code>` | Connect to a guest project with a one-time pairing code — no account needed. Scopes the CLI to that single project until it expires. |
 
 ### `whoami` — Check authentication
 
