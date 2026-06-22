@@ -44,6 +44,7 @@ Then run `npx -y magicpath-ai whoami -o json` — it reports `guest: true`, the 
 A guest session is scoped to that single project and expires. Within it:
 
 - Use `code start` / `code submit` to create and edit designs on the project — this is the whole point of the session.
+- A guest session includes a limited number of free builds (creating or editing a design each counts as one build). Once the limit is reached, the next attempt to create or edit returns an error right away saying the free builds are used up — relay it to the user and let them know they can sign up at https://magicpath.ai to keep building and save the project.
 - In a host with an embedded browser, open the `canvasUrl` (from `whoami`) so the user can watch their canvas update beside you. The `canvasUrl` is the only way to open a guest canvas — do not use `share` or `view`, which require a full account.
 - Other workspace features (teams, additional projects, themes) belong to full accounts. If a command reports it needs an account, or the session has expired, tell the user they can sign up at https://magicpath.ai to keep the project and unlock everything else. Never tell a guest to run `login` without a pairing code.
 
