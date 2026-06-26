@@ -1,6 +1,8 @@
 # Working With Repositories — Bring an Existing Codebase Into MagicPath
 
 > **IMPORTANT:** This flow is the **inverse** of `add`/`inspect`. With `add`/`inspect` the source of truth is the MagicPath registry and the destination is the user's app. Here the **source of truth is the user's repository** and the **destination is the MagicPath canvas**. You recreate the repo's UI as a canvas component using the `code start` → `code submit` authoring flow. Do **not** use `add`, `inspect`, or `code context` for this — they are for other workflows (see the boundaries section below).
+>
+> For the opposite direction—exporting a MagicPath design or replacing local UI with one—use [Using MagicPath designs in local code](using-magicpath-designs-in-local-code.md).
 
 This reference tells an external agent (MagicPath's own agent, Claude Code, Codex, Cursor, etc.) exactly what to do when the user wants to take UI that already exists in a Git repository — local or online — and reproduce it faithfully as a React component on their MagicPath canvas.
 
