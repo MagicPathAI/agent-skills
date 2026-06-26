@@ -393,10 +393,11 @@ magicpath-ai selection -o json
 
 Returns the component(s) and image(s) currently selected in the MagicPath web app canvas, along with the project(s) the user has open. Returns empty `components`/`images` if the user has nothing of that type selected, and empty `projects` if no canvas is open.
 
-JSON output: `{ projects: [{ id, name, ownerType, ownerName }], components: [{ id, name, generatedName, clientId, projectId, projectName }], images: [{ id, shapeId, name, projectId, projectName, width, height }] }`
+JSON output: `{ projects: [{ id, name, ownerType, ownerName }], components: [{ id, name, generatedName, clientId, projectId, projectName, selectedRevisionId }], images: [{ id, shapeId, name, projectId, projectName, width, height }] }`
 
 Notes:
 - `projects` is the same shape returned by `active-project` — calling `selection` gives you both signals in one round-trip.
+- `selectedRevisionId` identifies the revision currently displayed for that component. Pass it to revision-aware commands such as `code context --revision` so an export or inspection cannot drift to another revision.
 - `components` may be empty while `images` or `projects` are non-empty. Use that to decide whether to start a code session with selected image context, or fall back to listing/searching components.
 - If only the open project is needed (not the selection), prefer `active-project` — it is faster than `selection`.
 
@@ -483,7 +484,7 @@ If selected canvas images were available, `code start` also writes them into `<d
 npx -y magicpath-ai code context <componentId> --dir ./mp-work -o json
 ```
 
-Writes `src/App.tsx`, `src/index.css`, and `src/components/generated/**` into `<dir>` for inspection only. It does **not** create a pending revision, does **not** show canvas presence, and does **not** write `magicpath-code.json`. Use `code start --component <componentId>` before submitting edits.
+Writes `src/App.tsx`, `src/index.css`, and `src/components/generated/**` into `<dir>` read-only. It does **not** create a pending revision, does **not** show canvas presence, and does **not** write `magicpath-code.json`. Use it with `--revision` as the revision-safe source-export path when taking a design out of MagicPath. Use `code start --component <componentId>` instead before submitting edits back to MagicPath.
 
 | Flag | Description | Default |
 |------|-------------|---------|
