@@ -540,6 +540,24 @@ Returns `pending`, `processing`, `completed`, `failed`, or `cancelled`. Failed j
 
 Standalone images that live directly on a project's canvas (alongside components). This is distinct from the `assets/` files in the `code` flow, which are build inputs for a single component — `image` operates on the project canvas itself.
 
+#### `image generate` — Generate an image with AI
+
+```bash
+npx -y magicpath-ai image generate --prompt "warm photo of a mountain sunrise" --aspect-ratio 16:9 -o json
+npx -y magicpath-ai image generate --prompt "make the jacket red" --ref ./photo.jpg --out ./assets/jacket.png -o json
+```
+
+Generates (or edits) a raster image server-side and writes it to a local file; MagicPath also hosts a copy. JSON output: `{ image: { path, url, mimetype, size, revisedPrompt } }` — `path` is the local file, `url` is a permanent public hosted URL.
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--prompt <text>` | What to generate (required, max 4000 chars) | — |
+| `--aspect-ratio <ratio>` | `1:1`, `16:9`, `9:16`, `4:3`, or `3:4` | model default |
+| `--ref <path>` | Local reference image to edit/restyle (repeatable, up to 3, PNG/JPEG/WebP/GIF) | none |
+| `--out <path>` | Where to write the image | `./magicpath-image-<timestamp>.<ext>` |
+
+Use it for standalone raster requests — photographs, illustrations, textures, transparent cutouts — not for editable canvas designs (use `code start`/`code submit` for those). Pass `--ref` to edit or restyle an existing photo instead of inventing a new one. Follow up with `image add <projectId> <path>` to place the result on a canvas, or write it into the code session's `assets/` folder to use it inside a design. Returns a 503-style error when image generation is not configured on the server — report that plainly rather than claiming an image was created.
+
 #### `image list` — List the images on a project canvas
 
 ```bash
